@@ -15,10 +15,7 @@ The technical content was rechecked on **16 September 2026** against:
 - Node, Chrome DevTools, Playwright, and HTML documentation
 - npm package metadata and a dated weekly-download snapshot
 
-The in-app **Sources** page links every primary source. The long-form posts live in:
-
-- [`docs/the-hour-that-doesnt-exist.md`](docs/the-hour-that-doesnt-exist.md) — the main narrative article
-- [`docs/timezones.md`](docs/timezones.md) — the structured Angular guide
+The in-app **Sources** page links every primary source used by the teaching content.
 
 Package versions and download counts are snapshots, not permanent claims. Browser and runtime support is feature-detected where possible.
 
