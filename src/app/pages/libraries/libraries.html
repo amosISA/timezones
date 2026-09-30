@@ -1,0 +1,476 @@
+<article class="space-y-10">
+  <section>
+    <h2 class="mb-4 text-3xl font-bold text-cyan-300">Libraries</h2>
+
+    <div class="space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <p class="leading-relaxed text-slate-300">
+        Every library on this page exists because of the same two gaps in the language:
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-amber-300">Date</code> cannot format to
+        a pattern, and it cannot represent a zone other than the host's. Everything else they offer
+        is a consequence of solving those two things.
+      </p>
+      <p class="leading-relaxed text-slate-300">
+        Which means the honest first question is not "which library" but
+        <strong class="text-cyan-200">"do I need one at all"</strong>. If you only render dates,
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-amber-300">Intl.DateTimeFormat</code>
+        already does that in every zone and every locale, for zero bytes.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ THE DECISIVE DIFFERENCE ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">
+      The One Distinction Most Comparisons Miss
+    </h3>
+    <p class="mb-4 text-slate-400">
+      Before comparing APIs, compare
+      <strong class="text-slate-200">where the timezone rules come from</strong>. This decides the
+      download size, whether the data can go stale, and what happens on an old device. It matters
+      more than syntax.
+    </p>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div class="rounded-xl border border-green-800/50 bg-slate-900 p-5">
+        <div class="mb-3 flex items-center gap-2">
+          <span class="rounded bg-green-500/20 px-2 py-0.5 text-xs font-bold text-green-300"
+            >ENGINE-BACKED</span
+          >
+          <span class="text-sm text-slate-400">reads the runtime's ICU data</span>
+        </div>
+        <p class="mb-3 text-sm text-slate-300">
+          The library asks <code class="rounded bg-slate-800 px-1 text-amber-300">Intl</code> for
+          the offset and does arithmetic around it. It ships
+          <strong class="text-green-200">zero bytes of timezone data</strong>, and its rules are as
+          current as the browser.
+        </p>
+        <div class="flex flex-wrap gap-1.5">
+          @for (library of engineBacked(); track library.name) {
+            <span class="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-300">{{
+              library.name
+            }}</span>
+          }
+        </div>
+        <p class="mt-3 text-xs text-green-300/80">
+          Trade-off: on an ancient engine with stale ICU data, you inherit that staleness.
+        </p>
+      </div>
+
+      <div class="rounded-xl border border-red-800/50 bg-slate-900 p-5">
+        <div class="mb-3 flex items-center gap-2">
+          <span class="rounded bg-red-500/20 px-2 py-0.5 text-xs font-bold text-red-300"
+            >BUNDLE-BACKED</span
+          >
+          <span class="text-sm text-slate-400">ships its own copy of tzdata</span>
+        </div>
+        <p class="mb-3 text-sm text-slate-300">
+          The library carries the IANA database in your JavaScript bundle. Consistent everywhere —
+          and <strong class="text-red-200">frozen at the version you installed</strong>.
+        </p>
+        <div class="flex flex-wrap gap-1.5">
+          @for (library of bundleBacked(); track library.name) {
+            <span class="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-300"
+              >{{ library.name }} · {{ library.gzipKb }} kB</span
+            >
+          }
+          <span class="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-300"
+            >&#64;js-joda/timezone · 38 kB</span
+          >
+        </div>
+        <p class="mt-3 text-xs text-red-300/80">
+          Trade-off: 100+ kB gzipped, and every government rule change needs a dependency bump and a
+          redeploy.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE TABLE ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">The Comparison</h3>
+    <p class="mb-4 text-sm text-slate-400">
+      Package versions and weekly npm downloads were checked on 16 September 2026; downloads cover
+      5–11 September. Sizes are indicative minified + gzipped Bundlephobia estimates, not promises
+      about your final bundle.
+    </p>
+
+    <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900">
+      <table class="w-full min-w-[900px] text-sm">
+        <caption class="sr-only">
+          Comparison of JavaScript date and timezone libraries by size, timezone data source,
+          immutability, tree-shakeability and maintenance status
+        </caption>
+        <thead>
+          <tr class="border-b border-slate-700 text-left">
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Library</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Size</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Timezone data</th>
+            <th scope="col" class="px-4 py-3 text-center font-semibold text-slate-300">
+              Immutable
+            </th>
+            <th scope="col" class="px-4 py-3 text-center font-semibold text-slate-300">
+              Tree-shake
+            </th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Status</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Downloads</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (library of libraries; track library.packageName + library.name) {
+            <tr class="border-b border-slate-800 last:border-0 hover:bg-slate-800/30">
+              <td class="px-4 py-3">
+                <a
+                  [href]="library.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="font-medium text-cyan-300 hover:text-cyan-200 hover:underline"
+                  >{{ library.name }}</a
+                >
+                <code class="mt-0.5 block text-xs text-slate-500">{{ library.packageName }}</code>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                @if (library.gzipKb === null) {
+                  <span class="font-mono text-sm font-semibold text-green-300">0 kB</span>
+                } @else {
+                  <span
+                    class="font-mono text-sm"
+                    [class]="
+                      library.gzipKb > 60
+                        ? 'text-red-300'
+                        : library.gzipKb > 20
+                          ? 'text-amber-300'
+                          : 'text-green-300'
+                    "
+                    >{{ library.gzipKb }} kB</span
+                  >
+                }
+              </td>
+              <td class="px-4 py-3">
+                <span
+                  class="mb-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-bold uppercase"
+                  [class]="
+                    library.tzSource === 'engine'
+                      ? 'bg-green-500/20 text-green-300'
+                      : library.tzSource === 'bundled'
+                        ? 'bg-red-500/20 text-red-300'
+                        : 'bg-slate-600/40 text-slate-300'
+                  "
+                  >{{ library.tzSource }}</span
+                >
+                <span class="block max-w-xs text-xs text-slate-400">{{ library.tzNote }}</span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span [class]="library.immutable ? 'text-green-400' : 'text-red-400'">{{
+                  library.immutable ? '✓' : '✗'
+                }}</span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span [class]="library.treeShakeable ? 'text-green-400' : 'text-slate-600'">{{
+                  library.treeShakeable ? '✓' : '—'
+                }}</span>
+              </td>
+              <td class="px-4 py-3">
+                <span
+                  class="rounded px-2 py-0.5 text-xs font-medium whitespace-nowrap"
+                  [class]="
+                    library.health === 'native'
+                      ? 'bg-cyan-500/20 text-cyan-200'
+                      : library.health === 'active'
+                        ? 'bg-green-500/20 text-green-200'
+                        : library.health === 'maintenance'
+                          ? 'bg-amber-500/20 text-amber-200'
+                          : 'bg-red-500/20 text-red-200'
+                  "
+                  >{{ library.health }}</span
+                >
+              </td>
+              <td class="px-4 py-3 font-mono text-xs whitespace-nowrap text-slate-400">
+                {{ library.downloads }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ WHEN TO USE WHAT ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">Best For / Watch Out</h3>
+    <p class="mb-4 text-sm text-slate-400">
+      The table above says what they weigh. This says what they are actually
+      <em>for</em> — and the specific thing that will bite you.
+    </p>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      @for (library of libraries; track library.packageName + library.name) {
+        <div class="rounded-xl border border-slate-700 bg-slate-900 p-5">
+          <div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+            <h4 class="font-semibold text-slate-100">{{ library.name }}</h4>
+            <span
+              class="rounded px-2 py-0.5 text-xs font-medium"
+              [class]="
+                library.health === 'native'
+                  ? 'bg-cyan-500/20 text-cyan-200'
+                  : library.health === 'active'
+                    ? 'bg-green-500/20 text-green-200'
+                    : 'bg-red-500/20 text-red-200'
+              "
+              >{{ library.health }}</span
+            >
+          </div>
+          <p class="mb-3 text-sm text-slate-300">
+            <span class="font-semibold text-green-300">Best for:</span> {{ library.bestFor }}
+          </p>
+          <p class="text-sm text-slate-400">
+            <span class="font-semibold text-amber-300">Watch out:</span> {{ library.watchOut }}
+          </p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ============ DECISION GUIDE ============ -->
+  <section>
+    <h3 class="mb-4 text-2xl font-semibold text-purple-300">Just Tell Me What To Use</h3>
+
+    <div class="space-y-3">
+      @for (entry of decisionGuide; track entry.need) {
+        <div
+          class="rounded-xl border p-5"
+          [class]="
+            entry.tone === 'green'
+              ? 'border-green-800/40 bg-green-950/15'
+              : entry.tone === 'cyan'
+                ? 'border-cyan-800/40 bg-cyan-950/15'
+                : 'border-amber-800/40 bg-amber-950/15'
+          "
+        >
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:gap-4">
+            <p class="flex-1 text-sm text-slate-300">
+              <span class="text-slate-500">“</span>{{ entry.need
+              }}<span class="text-slate-500">”</span>
+            </p>
+            <p
+              class="shrink-0 font-semibold"
+              [class]="
+                entry.tone === 'green'
+                  ? 'text-green-300'
+                  : entry.tone === 'cyan'
+                    ? 'text-cyan-300'
+                    : 'text-amber-300'
+              "
+            >
+              → {{ entry.answer }}
+            </p>
+          </div>
+          <p class="mt-2 border-t border-slate-800/60 pt-2 text-xs text-slate-400">
+            {{ entry.why }}
+          </p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ============ TEMPORAL ============ -->
+  <section>
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+      <span class="rounded bg-cyan-500/20 px-2 py-1 font-mono text-xs font-bold text-cyan-300"
+        >THE ENDGAME</span
+      >
+      <h3 class="text-2xl font-semibold text-purple-300">Temporal</h3>
+    </div>
+
+    <div class="mb-4 rounded-xl border border-cyan-800/50 bg-slate-900 p-6">
+      <p class="mb-4 leading-relaxed text-slate-300">
+        Temporal is the ES2026 replacement for
+        <code class="rounded bg-slate-800 px-1 text-amber-300">Date</code>. It is not a nicer
+        wrapper — it is a different design, and it deletes essentially every trap in this app
+        <strong class="text-cyan-200">by construction</strong> rather than by convention.
+      </p>
+
+      <div class="rounded-lg border border-slate-700 bg-slate-950/60 p-4">
+        <p class="mb-2 text-sm font-semibold text-slate-200">Availability in your browser</p>
+        @if (hasTemporal()) {
+          <p class="text-sm text-green-300">
+            ✓ <code class="rounded bg-slate-800 px-1">Temporal</code> is available in this runtime.
+            The examples below are executing natively, right now.
+          </p>
+        } @else {
+          <p class="text-sm text-amber-300">
+            ✗ <code class="rounded bg-slate-800 px-1">Temporal</code> is not available in this
+            runtime, so the examples below are not shown live.
+          </p>
+        }
+        <p class="mt-3 text-xs text-slate-400">
+          TC39's implementation status lists Firefox 139, Chrome 144, and Node 26 as shipped. Safari
+          stable is not listed yet, so feature-detect with
+          <code class="rounded bg-slate-800 px-1 text-amber-300"
+            >typeof Temporal !== 'undefined'</code
+          >
+          and use a tested polyfill when your support matrix needs one. Check the actual runtime
+          rather than inferring support from a version number.
+        </p>
+      </div>
+    </div>
+
+    <!-- What it fixes -->
+    <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900">
+      <table class="w-full min-w-[720px] text-sm">
+        <caption class="sr-only">
+          Each Date pitfall covered in this app, and how Temporal removes it
+        </caption>
+        <thead>
+          <tr class="border-b border-slate-700 text-left">
+            <th scope="col" class="px-4 py-3 font-semibold text-red-300">The problem with Date</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-green-300">
+              How Temporal removes it
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (fix of temporalFixes; track fix.problem) {
+            <tr class="border-b border-slate-800 last:border-0">
+              <td class="px-4 py-3 text-slate-400">{{ fix.problem }}</td>
+              <td class="px-4 py-3 text-slate-200">{{ fix.solution }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Live demo -->
+    @let demo = temporalDemo();
+    @if (demo) {
+      <div class="mt-4 rounded-xl border border-green-800/50 bg-slate-900 p-6">
+        <h4 class="mb-4 font-semibold text-green-200">Running natively in your browser</h4>
+
+        <div class="space-y-4">
+          <div>
+            <p class="mb-2 text-xs tracking-wider text-slate-500 uppercase">
+              The two kinds of "add a day", now explicit
+            </p>
+            <div class="space-y-1.5 font-mono text-xs">
+              <div class="rounded bg-slate-950/60 px-3 py-2 text-slate-300">{{ demo.start }}</div>
+              <div class="rounded bg-slate-950/60 px-3 py-2">
+                <span class="text-slate-500">.add(&#123; days: 1 &#125;) →</span>
+                <span class="text-green-300">{{ demo.plusCalendarDay }}</span>
+              </div>
+              <div class="rounded bg-slate-950/60 px-3 py-2">
+                <span class="text-slate-500">.add(&#123; hours: 24 &#125;) →</span>
+                <span class="text-cyan-300">{{ demo.plusExactHours }}</span>
+              </div>
+            </div>
+            <p class="mt-2 text-xs text-slate-400">
+              Same DST boundary as
+              <a
+                routerLink="/how-dates-work"
+                class="text-cyan-400 underline decoration-cyan-700 hover:text-cyan-300"
+                >Trap 7</a
+              >. With <code class="rounded bg-slate-800 px-1">Date</code> you had to know which
+              behaviour you were getting. Here you say it.
+            </p>
+          </div>
+
+          <div>
+            <p class="mb-2 text-xs tracking-wider text-slate-500 uppercase">
+              Ambiguous times must be resolved deliberately
+            </p>
+            <div class="space-y-1.5 font-mono text-xs">
+              <div class="rounded bg-slate-950/60 px-3 py-2">
+                <span class="text-slate-500">disambiguation: 'earlier' →</span>
+                <span class="text-amber-300">{{ demo.ambiguousEarlier }}</span>
+              </div>
+              <div class="rounded bg-slate-950/60 px-3 py-2">
+                <span class="text-slate-500">disambiguation: 'later' →</span>
+                <span class="text-amber-300">{{ demo.ambiguousLater }}</span>
+              </div>
+            </div>
+            <p class="mt-2 text-xs text-slate-400">
+              The repeated hour from the
+              <a
+                routerLink="/dst"
+                class="text-cyan-400 underline decoration-cyan-700 hover:text-cyan-300"
+                >DST page</a
+              >. There is also
+              <code class="rounded bg-slate-800 px-1 text-amber-300">'reject'</code>, which throws
+              rather than guessing.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="rounded bg-slate-950/60 p-3">
+              <p class="text-xs text-slate-500">PlainDate — no time, no zone, no instant</p>
+              <p class="mt-1 font-mono text-sm text-green-300">{{ demo.plainDate }}</p>
+            </div>
+            <div class="rounded bg-slate-950/60 p-3">
+              <p class="text-xs text-slate-500">Month of June, one-based</p>
+              <p class="mt-1 font-mono text-sm text-green-300">{{ demo.monthOfJune }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="mt-4 rounded-xl border border-slate-700 bg-slate-900 p-5">
+      <p class="text-sm text-slate-300">
+        <strong class="text-slate-100">The type split is the whole idea.</strong>
+        <code class="rounded bg-slate-800 px-1 text-amber-300">Instant</code> is a moment in time.
+        <code class="rounded bg-slate-800 px-1 text-amber-300">PlainDate</code> is a calendar date
+        with no instant. <code class="rounded bg-slate-800 px-1 text-amber-300">PlainTime</code> is
+        a wall-clock reading.
+        <code class="rounded bg-slate-800 px-1 text-amber-300">ZonedDateTime</code>
+        is an instant plus the zone it should be read in. Every bug in this app came from
+        <code class="rounded bg-slate-800 px-1">Date</code> pretending all four were the same thing.
+        Temporal makes those concepts different runtime types. TypeScript declarations and an
+        explicit domain model can then catch many accidental mix-ups before production.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ CLOSING ============ -->
+  <section>
+    <h3 class="mb-4 text-2xl font-semibold text-purple-300">The Takeaway</h3>
+    <ul class="space-y-3 text-slate-300">
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-cyan-400" aria-hidden="true">→</span>
+        <span
+          ><strong class="text-slate-100">Reach for no library first.</strong>
+          <code class="rounded bg-slate-800 px-1 text-amber-300">Intl</code> covers display in any
+          zone and locale. A large share of date dependencies are formatting wrappers around an API
+          the browser already has.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-cyan-400" aria-hidden="true">→</span>
+        <span
+          ><strong class="text-slate-100">Prefer engine-backed over bundle-backed.</strong> Shipping
+          114 kB of timezone data that quietly expires is a worse deal than reading the browser's
+          own copy.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-cyan-400" aria-hidden="true">→</span>
+        <span
+          ><strong class="text-slate-100">Write Temporal-shaped code now</strong>, whichever library
+          you pick. Keep instants and calendar dates as separate types in your own model and the
+          eventual migration is mechanical.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-cyan-400" aria-hidden="true">→</span>
+        <span
+          ><strong class="text-slate-100">No library saves you from not knowing this.</strong> The
+          author of the article behind the
+          <a
+            routerLink="/dst"
+            class="text-cyan-400 underline decoration-cyan-700 hover:text-cyan-300"
+            >DST page</a
+          >
+          reached the same conclusion: use a library, but only after you understand what it is doing
+          on your behalf. A tool you cannot debug is not an advantage.</span
+        >
+      </li>
+    </ul>
+  </section>
+</article>

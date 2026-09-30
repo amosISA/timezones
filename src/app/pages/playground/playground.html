@@ -1,0 +1,245 @@
+<article class="space-y-8">
+  <section>
+    <h2 class="text-3xl font-bold text-cyan-300 mb-4">Timezone Playground</h2>
+    <p class="text-slate-400">
+      Interactive demos — experiment and see how dates behave in real time.
+    </p>
+  </section>
+
+  <!-- Live World Clock -->
+  <section>
+    <h3 class="text-2xl font-semibold text-purple-300 mb-4">🌍 Live World Clock</h3>
+
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-4">
+      <p class="text-xs text-slate-500 mb-3">
+        All times derived from a single <code class="bg-slate-800 px-1 rounded">new Date()</code> —
+        same timestamp, different display.
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        @for (row of worldClock(); track row.timezone) {
+          <div class="flex items-center gap-3 bg-slate-800 rounded-lg px-4 py-3">
+            <span class="text-lg">{{ row.isDaytime ? '☀️' : '🌙' }}</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-slate-500 truncate">{{ row.timezone }}</p>
+              <p class="text-cyan-300 font-mono text-sm">{{ row.localTime }}</p>
+            </div>
+            <span class="font-mono text-xs text-slate-600"
+              >{{ row.offset }}
+              <span class="block text-right text-slate-700">{{ row.abbreviation }}</span></span
+            >
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Time Converter -->
+  <section>
+    <h3 class="text-2xl font-semibold text-purple-300 mb-4">⏱️ Time Converter</h3>
+
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div>
+          <label class="block text-xs text-slate-500 uppercase mb-1">Time (HH:MM)</label>
+          <input
+            type="time"
+            [value]="conversionInput()"
+            (input)="onConversionInputChange($event)"
+            class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 text-sm font-mono focus:outline-none focus:border-cyan-500"
+          />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-500 uppercase mb-1">From Timezone</label>
+          <select
+            (change)="onSourceTzChange($event)"
+            class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-cyan-500"
+          >
+            @for (tz of timezones(); track tz) {
+              <option [value]="tz" [selected]="tz === selectedSourceTz()">{{ tz }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-500 uppercase mb-1">To Timezone</label>
+          <select
+            (change)="onTargetTzChange($event)"
+            class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-cyan-500"
+          >
+            @for (tz of timezones(); track tz) {
+              <option [value]="tz" [selected]="tz === selectedTargetTz()">{{ tz }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (conversionResult(); as result) {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div class="rounded-lg bg-slate-800 p-4">
+            <span class="mb-1 block text-xs text-slate-500 uppercase">Source</span>
+            <p class="font-mono text-green-300">{{ result.sourceTime }}</p>
+            <p class="mt-1 font-mono text-xs text-slate-500">{{ result.sourceOffset }}</p>
+          </div>
+          <div class="rounded-lg bg-slate-800 p-4">
+            <span class="mb-1 block text-xs text-slate-500 uppercase">Target</span>
+            <p class="font-mono text-cyan-300">{{ result.targetTime }}</p>
+            <p class="mt-1 font-mono text-xs text-slate-500">{{ result.targetOffset }}</p>
+          </div>
+          <div class="rounded-lg bg-slate-800 p-4">
+            <span class="mb-1 block text-xs text-slate-500 uppercase">UTC (ISO)</span>
+            <p class="font-mono text-xs break-all text-amber-300">{{ result.utcTime }}</p>
+          </div>
+        </div>
+
+        <!--
+          Surfacing the DST anomalies instead of hiding them. Most converters
+          silently return one instant and never tell you the reading was
+          nonexistent or ambiguous.
+        -->
+        @if (result.matchingInstants === 0) {
+          <div class="mt-4 rounded-lg border border-red-700/50 bg-red-950/30 p-4">
+            <p class="text-sm text-red-200">
+              <strong>That time does not exist</strong> in
+              <code class="rounded bg-slate-800 px-1">{{ selectedSourceTz() }}</code> on this date —
+              the clocks moved forward and skipped it. The result above was nudged past the gap,
+              which is what <code class="rounded bg-slate-800 px-1">new Date()</code> would silently
+              do too.
+            </p>
+          </div>
+        } @else if (result.matchingInstants === 2) {
+          <div class="mt-4 rounded-lg border border-amber-700/50 bg-amber-950/30 p-4">
+            <p class="text-sm text-amber-100">
+              <strong>That time is ambiguous</strong> in
+              <code class="rounded bg-slate-800 px-1">{{ selectedSourceTz() }}</code> on this date —
+              the clocks went back, so it happens twice, one hour apart. The result above is the
+              <em>first</em> pass. A wall-clock reading alone cannot tell you which was meant.
+            </p>
+          </div>
+        }
+      }
+    </div>
+  </section>
+
+  <!-- Date String Parser -->
+  <section>
+    <h3 class="text-2xl font-semibold text-purple-300 mb-4">🔬 Date String Parser</h3>
+
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
+      <p class="text-slate-400 text-sm mb-4">
+        Paste any date string to see how JavaScript parses it. Try different formats and see what
+        happens.
+      </p>
+
+      <input
+        type="text"
+        [value]="customIsoInput()"
+        (input)="onCustomIsoInput($event)"
+        class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-slate-100 font-mono text-sm focus:outline-none focus:border-cyan-500 mb-4"
+        placeholder="Try: 2024-06-15T14:30:00Z, June 15 2024, 2024/06/15, etc."
+      />
+
+      @if (parseError()) {
+        <div class="bg-red-950/30 border border-red-700/50 rounded-lg p-3 mb-4">
+          <p class="text-red-300 text-sm">{{ parseError() }}</p>
+        </div>
+      }
+
+      @if (parsedCustomDate(); as parsed) {
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-3">
+            <div class="bg-slate-800 rounded-lg p-3">
+              <span class="text-xs text-slate-500">Timestamp (ms since epoch)</span>
+              <p class="text-cyan-300 font-mono text-sm">{{ parsed.getTime() }}</p>
+            </div>
+            <div class="bg-slate-800 rounded-lg p-3">
+              <span class="text-xs text-slate-500">toISOString()</span>
+              <p class="text-green-300 font-mono text-sm">{{ parsed.toISOString() }}</p>
+            </div>
+            <div class="bg-slate-800 rounded-lg p-3">
+              <span class="text-xs text-slate-500">toUTCString()</span>
+              <p class="text-amber-300 font-mono text-sm">{{ parsed.toUTCString() }}</p>
+            </div>
+          </div>
+          <div class="space-y-3">
+            <div class="bg-slate-800 rounded-lg p-3">
+              <span class="text-xs text-slate-500">toString() (your local tz)</span>
+              <p class="text-slate-300 font-mono text-sm break-all">{{ parsed.toString() }}</p>
+            </div>
+            <div class="bg-slate-800 rounded-lg p-3">
+              <span class="text-xs text-slate-500">DatePipe 'full' UTC</span>
+              <p class="text-purple-300 font-mono text-sm">{{ parsed | date: 'full' : 'UTC' }}</p>
+            </div>
+            <div class="bg-slate-800 rounded-lg p-3">
+              <span class="text-xs text-slate-500">DatePipe 'full' (local)</span>
+              <p class="text-purple-300 font-mono text-sm">{{ parsed | date: 'full' }}</p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <div class="mt-4 bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+        <span class="text-xs text-slate-500 uppercase block mb-2">Try these strings:</span>
+        <div class="flex flex-wrap gap-2">
+          @for (example of parserExamples; track example) {
+            <button
+              (click)="selectExample(example)"
+              class="px-3 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-xs font-mono text-slate-300 transition-colors"
+            >
+              {{ example }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Common Gotchas -->
+  <section>
+    <h3 class="text-2xl font-semibold text-purple-300 mb-4">🚨 Common Gotchas</h3>
+
+    <div class="space-y-4">
+      <div class="bg-red-950/20 border border-red-800/50 rounded-xl p-5">
+        <h4 class="text-red-300 font-semibold mb-2">The "Off by One Day" Bug</h4>
+        <p class="text-slate-400 text-sm mb-2">
+          Parsing
+          <code class="bg-slate-800 px-1 rounded text-amber-300">"2024-06-15"</code> (date-only, no
+          time) is treated as UTC midnight. If you are in UTC-5, that becomes June
+          <strong>14th</strong> at 7pm local time.
+        </p>
+        <p class="text-slate-400 text-sm">
+          <strong class="text-slate-200">Fix:</strong> For date-only values, either keep them as
+          strings or parse with
+          <code class="bg-slate-800 px-1 rounded text-amber-300">"2024-06-15T00:00:00"</code> (no Z)
+          so it is interpreted as local.
+        </p>
+      </div>
+
+      <div class="bg-red-950/20 border border-red-800/50 rounded-xl p-5">
+        <h4 class="text-red-300 font-semibold mb-2">Comparing Dates Across Timezones</h4>
+        <p class="text-slate-400 text-sm mb-2">
+          Two dates that <em>look</em> different can be the same instant:
+          <code class="bg-slate-800 px-1 rounded text-amber-300">"2024-06-15T14:30:00Z"</code> and
+          <code class="bg-slate-800 px-1 rounded text-amber-300">"2024-06-15T10:30:00-04:00"</code>
+          have the same timestamp.
+        </p>
+        <p class="text-slate-400 text-sm">
+          <strong class="text-slate-200">Fix:</strong> Always compare timestamps (<code
+            class="bg-slate-800 px-1 rounded text-amber-300"
+            >.getTime()</code
+          >), never string representations.
+        </p>
+      </div>
+
+      <div class="bg-red-950/20 border border-red-800/50 rounded-xl p-5">
+        <h4 class="text-red-300 font-semibold mb-2">DST Transitions</h4>
+        <p class="text-slate-400 text-sm mb-2">
+          Adding "24 hours" is not always "one day." When DST changes, a day can be 23 or 25 hours.
+          Similarly, some times simply do not exist (e.g., 2:30 AM during spring forward).
+        </p>
+        <p class="text-slate-400 text-sm">
+          <strong class="text-slate-200">Fix:</strong> Use calendar arithmetic (add 1 to the day),
+          not millisecond arithmetic. The Temporal API (Stage 3) will solve this properly.
+        </p>
+      </div>
+    </div>
+  </section>
+</article>

@@ -1,0 +1,646 @@
+<article class="space-y-10">
+  <section>
+    <h2 class="mb-4 text-3xl font-bold text-cyan-300">DST &amp; Offsets</h2>
+
+    <div class="space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <p class="text-lg leading-relaxed text-slate-200">
+        A timezone is not an offset. A timezone is a
+        <strong class="text-cyan-200">rulebook</strong> that says which offset applies
+        <em>at a given moment in history</em>.
+      </p>
+      <p class="leading-relaxed text-slate-300">
+        The relationship is <strong class="text-amber-300">one zone to many offsets</strong>. New
+        York has used <code class="rounded bg-slate-800 px-1 text-amber-300">-05:00</code> and
+        <code class="rounded bg-slate-800 px-1 text-amber-300">-04:00</code> in the same year, and
+        its rules for switching between them changed in 2007. So the sentence "New York's timezone
+        is UTC-05:00" is not just imprecise — it is a category error. The honest version is: "New
+        York is <em>currently</em> observing UTC-05:00, under the rules in force today."
+      </p>
+      <p class="leading-relaxed text-slate-300">
+        Every value on this page is computed live from your runtime's own timezone database, so it
+        reflects the rules your users' browsers will actually apply.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ GMT vs UTC ============ -->
+  <section>
+    <h3 class="mb-4 text-2xl font-semibold text-purple-300">GMT is not UTC</h3>
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div class="rounded-xl border border-slate-700 bg-slate-900 p-5">
+        <h4 class="mb-2 font-semibold text-slate-100">GMT — Greenwich Mean Time</h4>
+        <p class="text-sm text-slate-400">
+          Clock time at the Royal Observatory in Greenwich, derived from the Earth's rotation. It
+          was the world standard from 1925 until 1972. Its problem: the Earth's rotation is not
+          perfectly steady, so the second itself drifts.
+        </p>
+      </div>
+      <div class="rounded-xl border border-amber-800/50 bg-slate-900 p-5">
+        <h4 class="mb-2 font-semibold text-amber-200">UTC — Coordinated Universal Time</h4>
+        <p class="text-sm text-slate-400">
+          Established in 1972 on top of International Atomic Time, measured by caesium atomic
+          frequency. It is the accurate replacement, kept aligned to the Earth's rotation by
+          occasional leap seconds.
+        </p>
+      </div>
+    </div>
+    <p class="mt-4 text-sm text-slate-400">
+      In everyday code the difference is under a second and the two names get used interchangeably.
+      Prefer <strong class="text-amber-200">UTC</strong> anyway — it is the one with a definition
+      that does not move. Note that
+      <code class="rounded bg-slate-800 px-1 text-amber-300">Intl</code> reports offsets with a
+      <code class="rounded bg-slate-800 px-1">GMT</code> prefix rather than
+      <code class="rounded bg-slate-800 px-1">UTC</code>; that is a naming convention in the
+      standard, not a claim about atomic time.
+    </p>
+  </section>
+
+  <!-- ============ THE GAP ============ -->
+  <section>
+    <div class="mb-4 flex items-baseline gap-3">
+      <span class="rounded bg-red-500/20 px-2 py-1 font-mono text-xs font-bold text-red-300"
+        >ANOMALY 1</span
+      >
+      <h3 class="text-2xl font-semibold text-purple-300">
+        Spring forward: times that do not exist
+      </h3>
+    </div>
+
+    @let spring = springForward();
+
+    <p class="mb-4 text-slate-400">
+      When the clock jumps forward, an hour of wall-clock readings is deleted from the calendar. In
+      <code class="rounded bg-slate-800 px-1 text-cyan-300">{{ spring.zone }}</code> on 10 March
+      2024, the local clock went straight from 01:59:59 to 03:00:00.
+    </p>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <!-- Gap timeline -->
+      <div class="mb-6">
+        <div class="flex items-stretch gap-1 overflow-hidden rounded-lg">
+          <div class="flex-1 bg-slate-800 px-3 py-4 text-center">
+            <p class="font-mono text-sm text-slate-300">01:00</p>
+            <p class="mt-1 text-[10px] text-slate-500">EST −05:00</p>
+          </div>
+          <div class="flex-1 bg-slate-800 px-3 py-4 text-center">
+            <p class="font-mono text-sm text-slate-300">01:59</p>
+            <p class="mt-1 text-[10px] text-slate-500">EST −05:00</p>
+          </div>
+          <div
+            class="flex-1 border-x-2 border-dashed border-red-500/60 bg-red-950/40 px-3 py-4 text-center"
+          >
+            <p class="font-mono text-sm text-red-300 line-through">02:00</p>
+            <p class="mt-1 text-[10px] font-semibold text-red-400">DELETED</p>
+          </div>
+          <div
+            class="flex-1 border-x-2 border-dashed border-red-500/60 bg-red-950/40 px-3 py-4 text-center"
+          >
+            <p class="font-mono text-sm text-red-300 line-through">02:59</p>
+            <p class="mt-1 text-[10px] font-semibold text-red-400">DELETED</p>
+          </div>
+          <div class="flex-1 bg-slate-800 px-3 py-4 text-center">
+            <p class="font-mono text-sm text-green-300">03:00</p>
+            <p class="mt-1 text-[10px] text-slate-500">EDT −04:00</p>
+          </div>
+          <div class="flex-1 bg-slate-800 px-3 py-4 text-center">
+            <p class="font-mono text-sm text-green-300">03:59</p>
+            <p class="mt-1 text-[10px] text-slate-500">EDT −04:00</p>
+          </div>
+        </div>
+        <p class="mt-2 text-center text-xs text-slate-500">
+          local wall clock · 10 March 2024 · {{ spring.zone }}
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase">One minute before</span>
+          <p class="font-mono text-sm text-slate-200">{{ spring.before }}</p>
+        </div>
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase">One minute later</span>
+          <p class="font-mono text-sm text-green-300">{{ spring.after }}</p>
+        </div>
+      </div>
+
+      <div class="mt-4 rounded-lg border border-red-800/40 bg-red-950/25 p-4">
+        <span class="text-xs tracking-wider text-red-400 uppercase">Asking for a deleted time</span>
+        <p class="mt-1 font-mono text-sm text-slate-400">{{ spring.requestedInput }}</p>
+        <p class="mt-1 font-mono text-sm text-red-300">→ {{ spring.resolvedTo }}</p>
+        <p class="mt-2 text-sm text-red-200">
+          No error. No warning. The runtime silently picks a different instant than the one you
+          named. A recurring "every day at 02:30" job in this zone
+          <strong>fires at 03:30 once a year</strong> — or, depending on your scheduler, not at all.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE OVERLAP ============ -->
+  <section>
+    <div class="mb-4 flex items-baseline gap-3">
+      <span class="rounded bg-red-500/20 px-2 py-1 font-mono text-xs font-bold text-red-300"
+        >ANOMALY 2</span
+      >
+      <h3 class="text-2xl font-semibold text-purple-300">Fall back: times that happen twice</h3>
+    </div>
+
+    @let fall = fallBack();
+
+    <p class="mb-4 text-slate-400">
+      The reverse is worse. When the clock goes back, an hour of wall-clock readings occurs
+      <strong class="text-slate-200">twice</strong>. In
+      <code class="rounded bg-slate-800 px-1 text-cyan-300">{{ fall.zone }}</code> on 3 November
+      2024, "01:30" names two instants an hour apart — and a local timestamp
+      <em>cannot tell you which one</em>. The information does not exist in the string.
+    </p>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <div class="mb-6">
+        <div class="flex items-stretch gap-1 overflow-hidden rounded-lg">
+          <div class="flex-1 bg-slate-800 px-2 py-4 text-center">
+            <p class="font-mono text-sm text-slate-300">00:30</p>
+            <p class="mt-1 text-[10px] text-slate-500">−04:00</p>
+          </div>
+          <div class="flex-1 border-2 border-amber-500/60 bg-amber-950/40 px-2 py-4 text-center">
+            <p class="font-mono text-sm text-amber-300">01:30</p>
+            <p class="mt-1 text-[10px] font-semibold text-amber-400">1st pass · −04:00</p>
+          </div>
+          <div class="flex-1 border-2 border-amber-500/60 bg-amber-950/40 px-2 py-4 text-center">
+            <p class="font-mono text-sm text-amber-300">01:30</p>
+            <p class="mt-1 text-[10px] font-semibold text-amber-400">2nd pass · −05:00</p>
+          </div>
+          <div class="flex-1 bg-slate-800 px-2 py-4 text-center">
+            <p class="font-mono text-sm text-slate-300">02:30</p>
+            <p class="mt-1 text-[10px] text-slate-500">−05:00</p>
+          </div>
+        </div>
+        <p class="mt-2 text-center text-xs text-slate-500">
+          local wall clock · 3 November 2024 · {{ fall.zone }}
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div class="rounded-lg border border-amber-800/40 bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-amber-400 uppercase">First 01:30</span>
+          <p class="mt-1 font-mono text-sm text-slate-200">{{ fall.firstWall }}</p>
+          <p class="mt-1 font-mono text-xs break-all text-green-300">{{ fall.firstIso }}</p>
+        </div>
+        <div class="rounded-lg border border-amber-800/40 bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-amber-400 uppercase">Second 01:30</span>
+          <p class="mt-1 font-mono text-sm text-slate-200">{{ fall.secondWall }}</p>
+          <p class="mt-1 font-mono text-xs break-all text-green-300">{{ fall.secondIso }}</p>
+        </div>
+      </div>
+
+      <p class="mt-4 text-center font-mono text-sm text-amber-300">
+        identical wall-clock text · {{ fall.gapHours }} hour apart in reality
+      </p>
+
+      <div class="mt-4 rounded-lg border border-red-800/40 bg-red-950/25 p-4">
+        <p class="text-sm text-red-200">
+          <strong>This is why local timestamps are not a valid storage format.</strong> Store
+          <code class="rounded bg-slate-800 px-1">2024-11-03 01:30:00</code> in a database column
+          with no offset and you have permanently destroyed information — no amount of later
+          processing can recover which of the two instants it was. Logs sorted by a local timestamp
+          go out of order once a year.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DST VARIETIES ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">
+      DST is not one hour, and not always in summer
+    </h3>
+    <p class="mb-4 text-slate-400">
+      Two assumptions worth deleting: that the shift is always 60 minutes, and that it happens in
+      the middle of the year. Both are false. Derived below by comparing each zone's actual offset
+      in January against July:
+    </p>
+
+    <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900">
+      <table class="w-full min-w-[680px] text-sm">
+        <caption class="sr-only">
+          January and July UTC offsets per zone, with the resulting daylight saving behaviour
+        </caption>
+        <thead>
+          <tr class="border-b border-slate-700 text-left">
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Zone</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">15 Jan</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">15 Jul</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Behaviour</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (profile of dstProfiles(); track profile.zone) {
+            <tr class="border-b border-slate-800 last:border-0">
+              <td class="px-4 py-3">
+                <span class="block font-medium text-slate-200">{{ profile.label }}</span>
+                <code class="text-xs text-slate-500">{{ profile.zone }}</code>
+              </td>
+              <td class="px-4 py-3 font-mono text-xs whitespace-nowrap text-cyan-300">
+                {{ profile.januaryOffset }}
+              </td>
+              <td class="px-4 py-3 font-mono text-xs whitespace-nowrap text-amber-300">
+                {{ profile.julyOffset }}
+              </td>
+              <td class="px-4 py-3">
+                <span
+                  class="rounded px-2 py-0.5 text-xs font-medium"
+                  [class]="
+                    profile.kind === 'none'
+                      ? 'bg-slate-700/50 text-slate-300'
+                      : profile.kind === 'partial'
+                        ? 'bg-purple-500/20 text-purple-200'
+                        : profile.kind === 'southern'
+                          ? 'bg-orange-500/20 text-orange-200'
+                          : 'bg-cyan-500/20 text-cyan-200'
+                  "
+                  >{{ profile.verdict }}</span
+                >
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div class="rounded-lg border border-purple-800/40 bg-purple-950/20 p-4">
+        <p class="text-sm text-purple-100">
+          <strong>Lord Howe Island</strong> shifts by only <strong>30 minutes</strong>. Any code
+          that assumes a DST transition is
+          <code class="rounded bg-slate-800 px-1">±3600000</code> ms is wrong there.
+        </p>
+      </div>
+      <div class="rounded-lg border border-orange-800/40 bg-orange-950/20 p-4">
+        <p class="text-sm text-orange-100">
+          <strong>Southern hemisphere zones are inverted</strong> — Sydney and Santiago are on DST
+          in January. "Summer time" is not a month range.
+        </p>
+      </div>
+      <div class="rounded-lg border border-slate-700 bg-slate-800/40 p-4">
+        <p class="text-sm text-slate-300">
+          <strong>Many zones have none at all.</strong> Tokyo, Kolkata, Phoenix — and Tehran, which
+          abolished DST in 2022. Never assume a transition exists.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ODD OFFSETS ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">Offsets are not whole hours</h3>
+    <p class="mb-4 text-slate-400">
+      The tidy 24-slice model from the previous page is a simplification. Real offsets include
+      quarter- and half-hour values, because they are drawn by governments rather than geometry.
+    </p>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      @for (entry of oddOffsets(); track entry.zone) {
+        <div class="rounded-xl border border-slate-700 bg-slate-900 p-4">
+          <div class="flex items-baseline justify-between gap-2">
+            <span class="font-medium text-slate-200">{{ entry.place }}</span>
+            <span class="font-mono text-sm text-amber-300">{{ entry.offset }}</span>
+          </div>
+          <code class="mt-1 block text-xs text-slate-500">{{ entry.zone }}</code>
+          <p class="mt-2 text-xs text-slate-400">{{ entry.note }}</p>
+        </div>
+      }
+    </div>
+
+    <p class="mt-4 text-sm text-slate-400">
+      Consequence for your code: an offset needs
+      <strong class="text-slate-200">minute precision</strong>, and a dropdown of 24 hour-values is
+      not a valid timezone picker. Use
+      <code class="rounded bg-slate-800 px-1 text-amber-300"
+        >Intl.supportedValuesOf('timeZone')</code
+      >
+      to enumerate real IANA identifiers instead.
+    </p>
+  </section>
+
+  <!-- ============ HISTORY ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">
+      Zones are political, and they change
+    </h3>
+    <p class="mb-4 text-slate-400">
+      Governments move their clocks for economic and political reasons, sometimes with weeks of
+      notice. Every example below is verified against your runtime's own database:
+    </p>
+
+    <div class="space-y-4">
+      @for (change of historicalChanges(); track change.title) {
+        <div class="rounded-xl border border-slate-700 bg-slate-900 p-5">
+          <h4 class="mb-2 font-semibold text-slate-100">{{ change.title }}</h4>
+          <p class="mb-4 text-sm text-slate-400">{{ change.summary }}</p>
+          <div class="mb-4 space-y-1.5">
+            @for (row of change.rows; track row.label) {
+              <div
+                class="flex flex-wrap items-baseline gap-x-3 rounded bg-slate-950/60 px-3 py-2 text-sm"
+              >
+                <span class="w-56 shrink-0 text-slate-400">{{ row.label }}</span>
+                <span class="font-mono text-amber-300">{{ row.value }}</span>
+              </div>
+            }
+          </div>
+          <p class="border-t border-slate-800 pt-3 text-sm text-cyan-200">
+            <strong>→</strong> {{ change.lesson }}
+          </p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ============ IANA ============ -->
+  <section>
+    <h3 class="mb-4 text-2xl font-semibold text-purple-300">Why IANA Names Exist</h3>
+
+    <div class="space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <p class="leading-relaxed text-slate-300">
+        Given all of the above, a timezone cannot be a rule — it has to be a
+        <strong class="text-cyan-200">database</strong>. That database is the
+        <a
+          href="https://www.iana.org/time-zones"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-cyan-400 underline decoration-cyan-700 hover:text-cyan-300"
+          >IANA Time Zone Database</a
+        >, usually called <em>tzdata</em>. Its main reliability target is civil-time data from 1970
+        onward, but historical coverage varies and future rules can change. Your result also depends
+        on the tzdb release bundled by the runtime.
+      </p>
+
+      <div class="rounded-lg border border-slate-700 bg-slate-950/60 p-4">
+        <p class="mb-2 font-mono text-sm text-cyan-300">Area/Location</p>
+        <p class="text-sm text-slate-400">
+          <code class="rounded bg-slate-800 px-1 text-amber-300">America/New_York</code>,
+          <code class="rounded bg-slate-800 px-1 text-amber-300">Europe/Bucharest</code>,
+          <code class="rounded bg-slate-800 px-1 text-amber-300">Asia/Seoul</code>. The location is
+          a <strong class="text-slate-200">city</strong>, not a country — deliberately, because
+          cities outlive states. Zones group regions whose offset and DST history has been
+          <em>uniformly</em> applied, which is why Seoul and Tokyo are separate entries despite
+          sharing an offset today.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="rounded-lg border border-amber-800/40 bg-amber-950/20 p-4">
+          <h4 class="mb-2 text-sm font-semibold text-amber-200">
+            Windows uses a different database
+          </h4>
+          <p class="text-sm text-amber-100/90">
+            Windows uses its own identifiers and rule representation —
+            <code class="rounded bg-slate-800 px-1">"Eastern Standard Time"</code> rather than
+            <code class="rounded bg-slate-800 px-1">America/New_York</code>. Unicode CLDR maintains
+            mappings between the systems. Browsers expose IANA identifiers through
+            <code class="rounded bg-slate-800 px-1">Intl</code>, while native and .NET APIs may use
+            Windows identifiers.
+          </p>
+        </div>
+        <div class="rounded-lg border border-red-800/40 bg-red-950/20 p-4">
+          <h4 class="mb-2 text-sm font-semibold text-red-200">The spec passes the buck</h4>
+          <p class="text-sm text-red-100/90">
+            ECMA-262 defines the DST adjustment as an implementation-dependent algorithm using the
+            best available timezone information, with only a
+            <em>recommendation</em> that engines use IANA. So the correctness of your date handling
+            is, formally, a vendor's best effort — and stale tzdata in an old runtime is a real
+            source of wrong answers.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OFFSET SIGN ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">
+      <code class="text-xl">getTimezoneOffset()</code> has a backwards sign
+    </h3>
+
+    @let sign = offsetSign();
+
+    <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <p class="mb-5 text-slate-400">
+        It returns "minutes you must add to local time to reach UTC", which is the negation of how
+        offsets are written everywhere else. A zone
+        <strong class="text-slate-200">ahead</strong> of UTC reports a
+        <strong class="text-slate-200">negative</strong> number.
+      </p>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase">Your true offset</span>
+          <p class="mt-1 font-mono text-lg text-amber-300">{{ sign.trueOffset }}</p>
+        </div>
+        <div class="rounded-lg border border-red-800/40 bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase">getTimezoneOffset()</span>
+          <p class="mt-1 font-mono text-lg text-red-300">{{ sign.minutes }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ sign.readsAs }}</p>
+        </div>
+        <div class="rounded-lg border border-green-800/40 bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase"
+            >negated → usable minutes</span
+          >
+          <p class="mt-1 font-mono text-lg text-green-300">{{ sign.corrected }}</p>
+        </div>
+      </div>
+      <p class="mt-5 border-t border-slate-800 pt-4 text-sm text-slate-400">
+        Two further catches: it is the offset
+        <strong class="text-slate-200">for that specific Date</strong>, not a constant for the zone,
+        so it changes across a DST boundary. And it only ever describes the
+        <strong class="text-slate-200">runtime's own</strong> zone — there is no built-in way to ask
+        it about another one. To get an arbitrary zone's offset, read
+        <code class="rounded bg-slate-800 px-1 text-amber-300">timeZoneName: 'longOffset'</code> out
+        of
+        <code class="rounded bg-slate-800 px-1 text-amber-300"
+          >Intl.DateTimeFormat.formatToParts()</code
+        >
+        — exactly what this page does.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ THE CONVERSION TRAP ============ -->
+  <section>
+    <div class="mb-4 flex items-baseline gap-3">
+      <span class="rounded bg-red-500/20 px-2 py-1 font-mono text-xs font-bold text-red-300"
+        >THE BIG ONE</span
+      >
+      <h3 class="text-2xl font-semibold text-purple-300">
+        You cannot convert zones by adding an offset
+      </h3>
+    </div>
+
+    @let trap = conversionTrap();
+
+    <p class="mb-4 text-slate-400">
+      This is the mistake that motivates every timezone library ever written. The pattern looks
+      reasonable: read the offset difference between two zones, shift the timestamp by it, and shift
+      back when you are done. It works — right up until the user edits a date across a DST boundary,
+      because the offset you captured is
+      <strong class="text-slate-200">no longer the offset that applies</strong>.
+    </p>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase"
+            >An appointment, in Seoul</span
+          >
+          <p class="mt-1 font-mono text-sm text-cyan-300">{{ trap.originalSeoul }}</p>
+        </div>
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase"
+            >The same instant, in New York</span
+          >
+          <p class="mt-1 font-mono text-sm text-cyan-300">{{ trap.originalNewYork }}</p>
+        </div>
+      </div>
+
+      <ol class="mb-5 space-y-2 text-sm text-slate-300">
+        <li class="flex gap-3">
+          <span class="font-mono text-slate-500">1.</span>
+          <span
+            >Capture the offset difference:
+            <code class="rounded bg-slate-800 px-1 text-amber-300"
+              >{{ trap.capturedDelta }} minutes</code
+            ></span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span class="font-mono text-slate-500">2.</span>
+          <span>Shift the timestamp so local getters read as New York time.</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="font-mono text-slate-500">3.</span>
+          <span
+            >The user moves the appointment from the 10th to the
+            <strong class="text-slate-100">15th</strong>. DST began on the 12th.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span class="font-mono text-slate-500">4.</span>
+          <span>Shift back, to send it to the server.</span>
+        </li>
+      </ol>
+
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div class="rounded-lg border border-red-800/50 bg-red-950/25 p-4">
+          <span class="text-xs font-bold tracking-wider text-red-300 uppercase"
+            >Reverting with the captured {{ trap.capturedDelta }} min</span
+          >
+          <p class="mt-2 font-mono text-sm text-red-300">{{ trap.wrong }}</p>
+          <p class="mt-2 text-xs text-red-200">
+            Wrong. The time the user chose has silently moved.
+          </p>
+        </div>
+        <div class="rounded-lg border border-green-800/50 bg-green-950/25 p-4">
+          <span class="text-xs font-bold tracking-wider text-green-300 uppercase"
+            >Reverting with the correct {{ trap.freshDelta }} min</span
+          >
+          <p class="mt-2 font-mono text-sm text-green-300">{{ trap.right }}</p>
+          <p class="mt-2 text-xs text-green-200">
+            Right — but only because we re-read the offset for the new date.
+          </p>
+        </div>
+      </div>
+
+      <p
+        class="mt-5 rounded-lg border border-amber-700/50 bg-amber-950/25 p-4 text-sm text-amber-100"
+      >
+        <strong
+          >A {{ trap.errorMinutes }}-minute error, from arithmetic that contains no visible
+          bug.</strong
+        >
+        The delta was correct when it was captured and wrong when it was used. There is no way to
+        fix this with a stored number — a correct conversion has to consult the
+        <em>rules for the target date</em>, which means consulting a timezone database. That is the
+        entire reason libraries exist. See the
+        <a
+          routerLink="/libraries"
+          class="text-cyan-400 underline decoration-cyan-700 hover:text-cyan-300"
+          >Libraries</a
+        >
+        tab.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ RULES ============ -->
+  <section>
+    <h3 class="mb-4 text-2xl font-semibold text-purple-300">Rules to Remember</h3>
+    <ul class="space-y-3 text-slate-300">
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-green-400" aria-hidden="true">✓</span>
+        <span
+          ><strong class="text-slate-100">Store instants, not wall-clock readings.</strong> An epoch
+          number or an ISO string with an offset survives DST. A local timestamp does not.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-green-400" aria-hidden="true">✓</span>
+        <span
+          ><strong class="text-slate-100">Store the IANA zone name alongside it</strong> when the
+          user's intent was a wall-clock time — "09:00 in
+          <code class="rounded bg-slate-800 px-1 text-amber-300">Europe/Bucharest</code>" for a
+          recurring meeting. An offset alone cannot reproduce it next year.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-green-400" aria-hidden="true">✓</span>
+        <span
+          ><strong class="text-slate-100">Test on a DST boundary.</strong> Add 10 March and 3
+          November 2024 in
+          <code class="rounded bg-slate-800 px-1 text-amber-300">America/New_York</code> to your
+          test fixtures. See the
+          <a
+            routerLink="/switch-timezone"
+            class="text-cyan-400 underline decoration-cyan-700 hover:text-cyan-300"
+            >Switch Timezone</a
+          >
+          tab for how.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-red-400" aria-hidden="true">✗</span>
+        <span
+          ><strong class="text-slate-100">Never cache an offset</strong> and reuse it for another
+          date. It is a reading of the rules at one instant, not a property of the zone.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-red-400" aria-hidden="true">✗</span>
+        <span
+          ><strong class="text-slate-100">Never assume a DST shift is one hour</strong>, that it
+          happens mid-year, or that it happens at all.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-red-400" aria-hidden="true">✗</span>
+        <span
+          ><strong class="text-slate-100">Never hand-roll zone conversion.</strong> The author of
+          the article this page draws on tried, failed, and concluded the same thing: use a library,
+          but understand what it is doing for you first.</span
+        >
+      </li>
+    </ul>
+
+    <div class="mt-6 rounded-xl border border-slate-700 bg-slate-900 p-5">
+      <p class="text-sm text-slate-400">
+        Further reading:
+        <a
+          href="https://toastui.medium.com/handling-time-zone-in-javascript-547e67aa842d"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-cyan-400 underline decoration-cyan-700 hover:text-cyan-300"
+          >Handling Time Zone in JavaScript</a
+        >
+        by DongWoo Kim (TOAST UI) — the source of the conversion example above, written while adding
+        timezone support to a production calendar library.
+      </p>
+    </div>
+  </section>
+</article>

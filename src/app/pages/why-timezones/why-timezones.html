@@ -1,0 +1,388 @@
+<article class="space-y-10">
+  <section>
+    <h2 class="mb-4 text-3xl font-bold text-cyan-300">Why Do Timezones Exist?</h2>
+
+    <div class="space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <p class="leading-relaxed text-slate-300">
+        Before the 19th century, every town set its own clock by the sun. Noon was the moment the
+        sun sat at its highest point over that town — and since the sun cannot be overhead in two
+        places at once, no two towns agreed. It did not matter, because nothing moved fast enough
+        for the disagreement to be noticeable. Then
+        <strong class="text-cyan-200">railways</strong> happened.
+      </p>
+      <p class="leading-relaxed text-slate-300">
+        Suddenly a schedule had to be readable in two towns at once. Bristol solar time was about
+        ten minutes behind London, so railway timetables had to reconcile clocks that disagreed.
+      </p>
+      <p class="leading-relaxed text-slate-300">
+        Railways and governments adopted standard time during the 19th century. In 1884, delegates
+        from 25 nations met in Washington D.C. and adopted the Greenwich meridian as the prime
+        meridian and a universal day. The familiar 24 one-hour bands are a useful geometric model,
+        not the boundaries imposed by that conference: governments choose real zones, offsets, and
+        exceptions.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ DIAGRAM 1: the problem railways created ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">The Problem, In One Picture</h3>
+    <p class="mb-4 text-sm text-slate-400">
+      The same physical moment, as three English towns would have named it before and after
+      standardisation.
+    </p>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div class="rounded-xl border border-red-900/50 bg-slate-900 p-5">
+        <div class="mb-4 flex items-center gap-2">
+          <span class="rounded bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-300"
+            >LOCAL SOLAR TIME</span
+          >
+          <span class="text-sm text-slate-400">local solar time</span>
+        </div>
+        <div class="space-y-3">
+          @for (town of solarTowns; track town.name) {
+            <div class="flex items-center gap-3">
+              <span class="w-24 shrink-0 text-sm text-slate-400">{{ town.name }}</span>
+              <span class="rounded bg-slate-800 px-2 py-1 font-mono text-lg text-red-300">{{
+                town.clock
+              }}</span>
+              @if (town.note) {
+                <span class="text-xs text-slate-500">{{ town.note }}</span>
+              }
+            </div>
+          }
+        </div>
+        <p class="mt-4 border-t border-slate-800 pt-3 text-xs text-red-300/80">
+          Three names for one instant. A timetable cannot be written.
+        </p>
+      </div>
+
+      <div class="rounded-xl border border-green-900/50 bg-slate-900 p-5">
+        <div class="mb-4 flex items-center gap-2">
+          <span class="rounded bg-green-500/20 px-2 py-0.5 text-xs font-semibold text-green-300"
+            >STANDARD TIME</span
+          >
+          <span class="text-sm text-slate-400">one shared zone (GMT)</span>
+        </div>
+        <div class="space-y-3">
+          @for (town of standardisedTowns; track town) {
+            <div class="flex items-center gap-3">
+              <span class="w-24 shrink-0 text-sm text-slate-400">{{ town }}</span>
+              <span class="rounded bg-slate-800 px-2 py-1 font-mono text-lg text-green-300"
+                >12:00</span
+              >
+            </div>
+          }
+        </div>
+        <p class="mt-4 border-t border-slate-800 pt-3 text-xs text-green-300/80">
+          One name for one instant. The cost: the sun is no longer exactly overhead at noon.
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-4 rounded-xl border border-cyan-800/40 bg-cyan-950/20 p-4">
+      <p class="text-sm text-cyan-100">
+        <strong>That trade is the whole story.</strong> A timezone deliberately sacrifices
+        astronomical accuracy to buy a name that many people can agree on. Every bug you will ever
+        write about dates is a bug about which of those two things you were actually holding.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ DIAGRAM 2: the 24 wedges ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">The 24 Slices</h3>
+    <p class="mb-4 text-sm text-slate-400">
+      15° of longitude per hour. UTC+0 sits at the top; eastward offsets run clockwise down the
+      right side, westward offsets down the left — the way a world map reads.
+      <span class="text-cyan-300">Your zone is highlighted.</span>
+    </p>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,400px)_1fr]">
+        <!-- The globe -->
+        <svg
+          viewBox="0 0 400 400"
+          class="mx-auto w-full max-w-[400px]"
+          role="img"
+          [attr.aria-label]="
+            'Diagram of the Earth divided into 24 hourly timezone wedges, from UTC minus 11 to UTC plus 12. Your current zone, ' +
+            offsetHours() +
+            ', is highlighted.'
+          "
+        >
+          <defs>
+            <radialGradient id="oceanGradient" cx="38%" cy="32%" r="72%">
+              <stop offset="0%" stop-color="#1e3a5f" />
+              <stop offset="100%" stop-color="#0b1729" />
+            </radialGradient>
+          </defs>
+
+          <!-- Ocean base -->
+          <circle
+            [attr.cx]="centerX"
+            [attr.cy]="centerY"
+            [attr.r]="radius"
+            fill="url(#oceanGradient)"
+          />
+
+          <!-- Hour wedges -->
+          <g>
+            @for (wedge of zoneWedges(); track wedge.offset) {
+              <path
+                [attr.d]="wedge.path"
+                [attr.fill]="
+                  wedge.isUserZone
+                    ? 'rgba(34, 211, 238, 0.38)'
+                    : wedge.isPrimeMeridian
+                      ? 'rgba(251, 191, 36, 0.22)'
+                      : wedge.offset % 2 === 0
+                        ? 'rgba(148, 163, 184, 0.10)'
+                        : 'rgba(148, 163, 184, 0.04)'
+                "
+                [attr.stroke]="
+                  wedge.isUserZone
+                    ? '#22d3ee'
+                    : wedge.isPrimeMeridian
+                      ? '#fbbf24'
+                      : 'rgba(148, 163, 184, 0.28)'
+                "
+                [attr.stroke-width]="wedge.isUserZone || wedge.isPrimeMeridian ? 2 : 0.75"
+              />
+            }
+          </g>
+
+          <!-- Offset labels -->
+          <g font-family="ui-monospace, monospace" font-size="13" text-anchor="middle">
+            @for (wedge of zoneWedges(); track wedge.offset) {
+              <text
+                [attr.x]="wedge.labelX"
+                [attr.y]="wedge.labelY + 4"
+                [attr.fill]="
+                  wedge.isUserZone ? '#67e8f9' : wedge.isPrimeMeridian ? '#fcd34d' : '#7c8ca3'
+                "
+                [attr.font-weight]="wedge.isUserZone || wedge.isPrimeMeridian ? 700 : 400"
+              >
+                {{ wedge.label }}
+              </text>
+            }
+          </g>
+
+          <!-- Greenwich marker -->
+          <line
+            [attr.x1]="centerX"
+            [attr.y1]="centerY - radius - 14"
+            [attr.x2]="centerX"
+            [attr.y2]="centerY"
+            stroke="#fbbf24"
+            stroke-width="2"
+            stroke-dasharray="4 3"
+          />
+          <text
+            [attr.x]="centerX"
+            [attr.y]="centerY - radius - 22"
+            fill="#fcd34d"
+            font-size="12"
+            font-weight="600"
+            text-anchor="middle"
+          >
+            Prime Meridian · Greenwich
+          </text>
+
+          <!-- Antimeridian / date line -->
+          <text
+            [attr.x]="centerX"
+            [attr.y]="centerY + radius + 24"
+            fill="#94a3b8"
+            font-size="11"
+            text-anchor="middle"
+          >
+            ± 12h · International Date Line
+          </text>
+
+          <!-- Core -->
+          <circle [attr.cx]="centerX" [attr.cy]="centerY" r="30" fill="#0f172a" />
+          <text
+            [attr.x]="centerX"
+            [attr.y]="centerY - 2"
+            fill="#e2e8f0"
+            font-size="13"
+            font-weight="700"
+            text-anchor="middle"
+          >
+            UTC
+          </text>
+          <text
+            [attr.x]="centerX"
+            [attr.y]="centerY + 13"
+            fill="#64748b"
+            font-size="9"
+            text-anchor="middle"
+          >
+            anchor
+          </text>
+        </svg>
+
+        <!-- Reading guide -->
+        <div class="space-y-4">
+          <div class="rounded-lg border border-cyan-800/50 bg-slate-950/60 p-4">
+            <span class="text-xs tracking-wider text-slate-500 uppercase">You are here</span>
+            <p class="mt-1 font-mono text-lg text-cyan-300">{{ localTimezone() }}</p>
+            <p class="font-mono text-sm text-amber-300">{{ offsetHours() }}</p>
+          </div>
+
+          <ul class="space-y-3 text-sm text-slate-300">
+            <li class="flex items-start gap-2">
+              <span
+                class="mt-1 inline-block h-3 w-3 shrink-0 rounded-sm border border-amber-400 bg-amber-400/25"
+              ></span>
+              <span
+                ><strong class="text-amber-200">UTC+0</strong> is not a timezone. It is the
+                zero-point every other zone is measured against, and it never shifts for daylight
+                saving.</span
+              >
+            </li>
+            <li class="flex items-start gap-2">
+              <span
+                class="mt-1 inline-block h-3 w-3 shrink-0 rounded-sm border border-cyan-400 bg-cyan-400/35"
+              ></span>
+              <span
+                ><strong class="text-cyan-200">Your slice</strong> is where the browser will render
+                every <code class="rounded bg-slate-800 px-1 text-amber-300">Date</code> unless you
+                explicitly ask for another zone.</span
+              >
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-slate-500">◇</span>
+              <span
+                >The clean 15° geometry is a <em>lie of convenience</em>. Real borders follow
+                politics: India uses a single
+                <code class="rounded bg-slate-800 px-1 text-amber-300">+05:30</code>, Nepal
+                <code class="rounded bg-slate-800 px-1 text-amber-300">+05:45</code>, and China
+                spans five geographic slices on one offset — so the sun can rise near 10:00 in its
+                west.</span
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DIAGRAM 3: one instant, many clocks ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">One Instant, Many Clocks</h3>
+    <p class="mb-4 text-sm text-slate-400">
+      Every clock below is rendered from the
+      <strong class="text-slate-200">same single millisecond value</strong>. Nothing about the
+      moment changes between them — only the zone used to name it.
+    </p>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <div class="mb-5 rounded-lg bg-slate-950/60 p-3 text-center">
+        <span class="text-xs tracking-wider text-slate-500 uppercase">The instant</span>
+        <p class="mt-1 font-mono text-sm break-all text-green-300">{{ utcNow() }}</p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        @for (clock of cityClocks(); track clock.timeZone) {
+          <div class="rounded-lg border border-slate-700 bg-slate-800/60 p-4">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-slate-100">{{ clock.city }}</p>
+                <p class="truncate font-mono text-xs text-slate-500">{{ clock.timeZone }}</p>
+              </div>
+              <span class="shrink-0 text-lg" aria-hidden="true">{{
+                clock.isDaytime ? '☀️' : '🌙'
+              }}</span>
+            </div>
+            <p class="mt-3 font-mono text-2xl text-cyan-300">{{ clock.time }}</p>
+            <div class="mt-1 flex items-baseline justify-between gap-2">
+              <span class="text-xs text-slate-400">{{ clock.dayLabel }}</span>
+              <span class="font-mono text-xs text-amber-300">{{ clock.offset }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <p class="mt-5 border-t border-slate-800 pt-4 text-sm text-slate-400">
+        Note that the <strong class="text-slate-200">date</strong> is not the same everywhere. When
+        it is Tuesday morning in Tokyo it is still Monday evening in Los Angeles. "What day is it?"
+        has no answer without a zone.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h3 class="mb-4 text-2xl font-semibold text-purple-300">The Core Concept</h3>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div class="rounded-xl border border-slate-700 bg-slate-900 p-5">
+        <div class="mb-3 text-4xl" aria-hidden="true">🕐</div>
+        <h4 class="mb-2 text-lg font-semibold text-slate-100">UTC is the Anchor</h4>
+        <p class="text-sm text-slate-400">
+          UTC is the international time standard and the zero-offset reference. APIs also accept
+          <code class="rounded bg-slate-800 px-1">UTC</code> as a zone identifier. It never shifts
+          for daylight saving.
+        </p>
+      </div>
+      <div class="rounded-xl border border-slate-700 bg-slate-900 p-5">
+        <div class="mb-3 text-4xl" aria-hidden="true">🔢</div>
+        <h4 class="mb-2 text-lg font-semibold text-slate-100">Offset = Difference</h4>
+        <p class="text-sm text-slate-400">
+          An offset says how much to add to UTC to get local wall-clock time. New York is
+          <code class="rounded bg-slate-800 px-1 text-amber-300">-05:00</code> in winter and
+          <code class="rounded bg-slate-800 px-1 text-amber-300">-04:00</code> in summer. An offset
+          is a <em>snapshot</em>, not an identity.
+        </p>
+      </div>
+      <div class="rounded-xl border border-slate-700 bg-slate-900 p-5">
+        <div class="mb-3 text-4xl" aria-hidden="true">🏷️</div>
+        <h4 class="mb-2 text-lg font-semibold text-slate-100">IANA Names</h4>
+        <p class="text-sm text-slate-400">
+          Because offsets change, we identify zones by region:
+          <code class="rounded bg-slate-800 px-1 text-amber-300">America/New_York</code>. That name
+          selects a set of civil-time rules from the runtime's copy of the IANA database. Historical
+          coverage and future rules depend on the database release, so keep runtimes current.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h3 class="mb-4 text-2xl font-semibold text-purple-300">Key Takeaways</h3>
+    <ul class="space-y-2 text-slate-300">
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-cyan-400" aria-hidden="true">→</span>
+        <span
+          >A JavaScript <strong class="text-slate-100">Date</strong> is an object whose time value
+          is a timestamp. It does not store an IANA timezone; the runtime applies the host's zone
+          when it renders local text.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-cyan-400" aria-hidden="true">→</span>
+        <span
+          >When you <em>display</em> a Date, the runtime applies a zone to format it. The underlying
+          timestamp never changes.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-cyan-400" aria-hidden="true">→</span>
+        <span
+          >Timezone bugs live at the <strong class="text-slate-100">boundary</strong>: the moment
+          you convert between a timestamp and a human-readable string, in either direction.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-cyan-400" aria-hidden="true">→</span>
+        <span
+          >"An instant" and "a wall-clock reading" are
+          <strong class="text-slate-100">different types</strong>. Most date bugs are one being
+          silently used where the other was meant.</span
+        >
+      </li>
+    </ul>
+  </section>
+</article>

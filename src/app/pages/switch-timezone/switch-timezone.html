@@ -1,0 +1,475 @@
+<article class="space-y-10">
+  <section>
+    <h2 class="mb-4 text-3xl font-bold text-cyan-300">Switching Timezones</h2>
+
+    <div class="space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <p class="leading-relaxed text-slate-300">
+        You cannot find a timezone bug from inside a single timezone. Almost every one of them is
+        invisible on the machine that wrote the code and obvious on a machine eight hours away — so
+        being able to <strong class="text-cyan-200">move your own clock in seconds</strong> is the
+        single highest-leverage skill in this whole topic.
+      </p>
+      <p class="leading-relaxed text-slate-300">
+        Below: the fast way (DevTools), the thorough way (your OS), the surgical way (the
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-amber-300">TZ</code> variable), and how
+        to pin it in tests so a regression cannot come back.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ LIVE VERIFICATION PANEL ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">Your Runtime, Right Now</h3>
+    <p class="mb-4 text-sm text-slate-400">
+      Keep this panel visible while you change a setting. It updates every second, so it is your
+      confirmation that the change actually landed.
+    </p>
+
+    @let state = resolved();
+
+    <div class="rounded-xl border border-cyan-800/50 bg-slate-900 p-6">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase">Resolved zone</span>
+          <p class="mt-1 font-mono text-sm break-all text-cyan-300">{{ state.timeZone }}</p>
+        </div>
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase">Offset</span>
+          <p class="mt-1 font-mono text-sm text-amber-300">{{ state.offset }}</p>
+          <p class="text-xs text-slate-500">{{ state.zoneAbbreviation }}</p>
+        </div>
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase">Resolved locale</span>
+          <p class="mt-1 font-mono text-sm text-purple-300">{{ state.locale }}</p>
+        </div>
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase">getTimezoneOffset()</span>
+          <p class="mt-1 font-mono text-sm text-slate-300">{{ state.offsetMinutes }}</p>
+          <p class="text-xs text-slate-500">minutes, inverted sign</p>
+        </div>
+      </div>
+
+      <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase">Local wall clock</span>
+          <p class="mt-1 font-mono text-sm text-slate-200">{{ state.wallClock }}</p>
+        </div>
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase"
+            >The same instant, in UTC</span
+          >
+          <p class="mt-1 font-mono text-sm text-green-300">{{ state.iso }}</p>
+        </div>
+      </div>
+
+      @if (knownZoneCount() !== null) {
+        <p class="mt-4 border-t border-slate-800 pt-4 text-sm text-slate-400">
+          This runtime's timezone database contains
+          <strong class="font-mono text-cyan-300">{{ knownZoneCount() }}</strong> IANA identifiers.
+          Enumerate them yourself with
+          <code class="rounded bg-slate-800 px-1 text-amber-300"
+            >Intl.supportedValuesOf('timeZone')</code
+          >
+          — that is how you build a correct timezone picker instead of a hardcoded list of 24.
+        </p>
+      }
+    </div>
+  </section>
+
+  <!-- ============ DEVTOOLS ============ -->
+  <section>
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+      <span class="rounded bg-green-500/20 px-2 py-1 font-mono text-xs font-bold text-green-300"
+        >START HERE</span
+      >
+      <h3 class="text-2xl font-semibold text-purple-300">
+        {{ devToolsGuide.icon }} {{ devToolsGuide.platform }}
+      </h3>
+    </div>
+
+    <div class="rounded-xl border border-green-800/40 bg-slate-900 p-6">
+      <p class="mb-4 text-slate-300">{{ devToolsGuide.tagline }}</p>
+
+      <div class="mb-5 flex flex-wrap gap-3 text-xs">
+        <span class="rounded bg-slate-800 px-2 py-1 text-slate-300"
+          >Scope: <strong class="text-slate-100">{{ devToolsGuide.scope }}</strong></span
+        >
+        <span class="rounded bg-slate-800 px-2 py-1 text-slate-300"
+          >Restart needed:
+          <strong class="text-green-300">{{ devToolsGuide.restartRequired }}</strong></span
+        >
+      </div>
+
+      <ol class="mb-5 space-y-3">
+        @for (step of devToolsGuide.steps; track $index) {
+          <li class="flex gap-3 text-sm text-slate-300">
+            <span
+              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500/20 font-mono text-xs text-green-300"
+              >{{ $index + 1 }}</span
+            >
+            <span class="pt-0.5">{{ step }}</span>
+          </li>
+        }
+      </ol>
+
+      @for (snippet of devToolsGuide.snippets; track snippet.code) {
+        <div class="mb-3">
+          <div class="mb-1 flex items-center justify-between gap-2">
+            <span class="text-xs text-slate-400">{{ snippet.label }}</span>
+            <button
+              type="button"
+              (click)="copy(snippet.code)"
+              class="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-400 transition-colors hover:border-cyan-600 hover:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none"
+            >
+              {{ copiedCode() === snippet.code ? 'Copied' : 'Copy' }}
+            </button>
+          </div>
+          <app-code-block
+            [code]="snippet.code"
+            [language]="snippet.language ?? 'bash'"
+            [label]="snippet.label"
+          />
+          @if (snippet.note) {
+            <p class="mt-1 text-xs text-slate-500">{{ snippet.note }}</p>
+          }
+        </div>
+      }
+
+      @if (devToolsGuide.gotcha) {
+        <div class="mt-4 rounded-lg border border-amber-700/50 bg-amber-950/25 p-4">
+          <p class="text-sm text-amber-100">
+            <strong>Watch out:</strong> {{ devToolsGuide.gotcha }}
+          </p>
+        </div>
+      }
+    </div>
+
+    <div class="mt-6 rounded-xl border border-cyan-700/50 bg-cyan-950/15 p-6">
+      <div class="mb-4 flex flex-wrap items-center gap-3">
+        <span class="rounded bg-cyan-500/20 px-2 py-1 font-mono text-xs font-bold text-cyan-300"
+          >MADRID → CAIRO</span
+        >
+        <h4 class="text-xl font-semibold text-slate-100">A complete debugging exercise</h4>
+      </div>
+
+      <p class="mb-5 max-w-3xl text-sm leading-relaxed text-slate-300">
+        Chrome can emulate Cairo without changing your computer. Create a reusable location preset
+        once, then switch the inspected page between your real environment and Egypt in seconds.
+      </p>
+
+      <div class="grid gap-5 lg:grid-cols-[1fr_1fr]">
+        <div>
+          <h5 class="mb-3 font-semibold text-cyan-200">1. Add the Cairo preset</h5>
+          <ol class="space-y-3 text-sm text-slate-300">
+            <li class="flex gap-3">
+              <span class="font-mono text-cyan-400">01</span>
+              <span
+                >Open DevTools Settings with <strong>F1</strong>, select <strong>Locations</strong>,
+                then click <strong>Add location</strong>.</span
+              >
+            </li>
+            <li class="flex gap-3">
+              <span class="font-mono text-cyan-400">02</span>
+              <span>Enter the values below and save the preset.</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="font-mono text-cyan-400">03</span>
+              <span
+                >Open <strong>Sensors</strong>, select <strong>Cairo</strong> from Location, and
+                reload this page.</span
+              >
+            </li>
+          </ol>
+
+          <dl
+            class="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-lg bg-slate-950/60 p-4 text-sm"
+          >
+            <dt class="text-slate-500">Name</dt>
+            <dd class="font-mono text-slate-200">Cairo</dd>
+            <dt class="text-slate-500">Latitude</dt>
+            <dd class="font-mono text-slate-200">30.0444</dd>
+            <dt class="text-slate-500">Longitude</dt>
+            <dd class="font-mono text-slate-200">31.2357</dd>
+            <dt class="text-slate-500">Timezone ID</dt>
+            <dd class="font-mono text-amber-300">Africa/Cairo</dd>
+            <dt class="text-slate-500">Locale</dt>
+            <dd class="font-mono text-purple-300">ar-EG</dd>
+          </dl>
+        </div>
+
+        <div>
+          <h5 class="mb-3 font-semibold text-cyan-200">2. Prove the override is active</h5>
+          <app-code-block
+            [code]="cairoVerificationCode"
+            language="javascript"
+            label="Verify the Cairo timezone and locale override"
+          />
+          <p class="mt-3 text-sm text-slate-400">
+            The zone should be
+            <code class="rounded bg-slate-800 px-1 text-amber-300">Africa/Cairo</code>. The ISO
+            instant does not change; only the local representation and offset do.
+          </p>
+
+          <div
+            class="mt-4 rounded-lg border border-amber-800/50 bg-amber-950/20 p-4 text-sm text-amber-100"
+          >
+            <strong>Test one variable at a time.</strong> Use
+            <code class="rounded bg-slate-800 px-1">ar-EG</code> for a realistic Egyptian locale.
+            Use <code class="rounded bg-slate-800 px-1">es-ES</code> with
+            <code class="rounded bg-slate-800 px-1">Africa/Cairo</code> when you want to isolate
+            timezone behavior without also changing number and date formatting.
+          </div>
+
+          <p class="mt-4 text-xs text-slate-500">
+            To return to Spain, choose <strong>No override</strong> in Sensors or close DevTools and
+            reload. The override is scoped to the inspected page; it does not change your operating
+            system.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OS GUIDES ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">Changing It At The OS Level</h3>
+    <p class="mb-4 text-sm text-slate-400">
+      Slower and more disruptive than DevTools, but it is the only way to test what a real user's
+      machine does — including the parts of the stack DevTools cannot reach.
+      @if (detectedPlatform()) {
+        <span class="text-cyan-300">Your platform is highlighted.</span>
+      }
+    </p>
+
+    <div class="space-y-4">
+      @for (guide of osGuides; track guide.id) {
+        <div
+          class="rounded-xl border bg-slate-900 p-6"
+          [class]="
+            detectedPlatform() === guide.id
+              ? 'border-cyan-700/60 ring-1 ring-cyan-800/40'
+              : 'border-slate-700'
+          "
+        >
+          <div class="mb-4 flex flex-wrap items-baseline gap-3">
+            <h4 class="text-xl font-semibold text-slate-100">
+              {{ guide.icon }} {{ guide.platform }}
+            </h4>
+            @if (detectedPlatform() === guide.id) {
+              <span class="rounded bg-cyan-500/20 px-2 py-0.5 text-xs font-medium text-cyan-300"
+                >you are probably here</span
+              >
+            }
+          </div>
+
+          <p class="mb-4 text-sm text-slate-400">{{ guide.tagline }}</p>
+
+          <div class="mb-5 flex flex-wrap gap-3 text-xs">
+            <span class="rounded bg-slate-800 px-2 py-1 text-slate-300"
+              >Scope: <strong class="text-slate-100">{{ guide.scope }}</strong></span
+            >
+            <span class="rounded bg-slate-800 px-2 py-1 text-slate-300"
+              >Restart needed:
+              <strong class="text-amber-300">{{ guide.restartRequired }}</strong></span
+            >
+          </div>
+
+          <ol class="mb-5 space-y-2">
+            @for (step of guide.steps; track $index) {
+              <li class="flex gap-3 text-sm text-slate-300">
+                <span
+                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-800 font-mono text-xs text-slate-400"
+                  >{{ $index + 1 }}</span
+                >
+                <span class="pt-0.5">{{ step }}</span>
+              </li>
+            }
+          </ol>
+
+          <div class="space-y-3">
+            @for (snippet of guide.snippets; track snippet.code) {
+              <div>
+                <div class="mb-1 flex items-center justify-between gap-2">
+                  <span class="text-xs text-slate-400">{{ snippet.label }}</span>
+                  <button
+                    type="button"
+                    (click)="copy(snippet.code)"
+                    class="shrink-0 rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-400 transition-colors hover:border-cyan-600 hover:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none"
+                  >
+                    {{ copiedCode() === snippet.code ? 'Copied' : 'Copy' }}
+                  </button>
+                </div>
+                <app-code-block
+                  [code]="snippet.code"
+                  [language]="snippet.language ?? 'bash'"
+                  [label]="snippet.label"
+                />
+                @if (snippet.note) {
+                  <p class="mt-1 text-xs text-slate-500">{{ snippet.note }}</p>
+                }
+              </div>
+            }
+          </div>
+
+          @if (guide.gotcha) {
+            <div class="mt-4 rounded-lg border border-amber-700/50 bg-amber-950/25 p-4">
+              <p class="text-sm text-amber-100"><strong>Watch out:</strong> {{ guide.gotcha }}</p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ============ PROCESS-LEVEL ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">Per-Process and In Tests</h3>
+    <p class="mb-4 text-sm text-slate-400">
+      The approach to reach for day to day: it changes nothing globally, it is reproducible, and it
+      is the same mechanism your CI will use.
+    </p>
+
+    <div class="space-y-4">
+      @for (guide of processGuides; track guide.id) {
+        <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+          <h4 class="mb-1 text-xl font-semibold text-slate-100">
+            {{ guide.icon }} {{ guide.platform }}
+          </h4>
+          <p class="mb-4 text-sm text-slate-400">{{ guide.tagline }}</p>
+
+          <div class="mb-5 flex flex-wrap gap-3 text-xs">
+            <span class="rounded bg-slate-800 px-2 py-1 text-slate-300"
+              >Scope: <strong class="text-slate-100">{{ guide.scope }}</strong></span
+            >
+          </div>
+
+          <ul class="mb-5 space-y-2">
+            @for (step of guide.steps; track $index) {
+              <li class="flex gap-3 text-sm text-slate-300">
+                <span class="mt-1 text-cyan-400" aria-hidden="true">→</span>
+                <span>{{ step }}</span>
+              </li>
+            }
+          </ul>
+
+          <div class="space-y-3">
+            @for (snippet of guide.snippets; track snippet.code) {
+              <div>
+                <div class="mb-1 flex items-center justify-between gap-2">
+                  <span class="text-xs text-slate-400">{{ snippet.label }}</span>
+                  <button
+                    type="button"
+                    (click)="copy(snippet.code)"
+                    class="shrink-0 rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-400 transition-colors hover:border-cyan-600 hover:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none"
+                  >
+                    {{ copiedCode() === snippet.code ? 'Copied' : 'Copy' }}
+                  </button>
+                </div>
+                <app-code-block
+                  [code]="snippet.code"
+                  [language]="snippet.language ?? 'bash'"
+                  [label]="snippet.label"
+                />
+                @if (snippet.note) {
+                  <p class="mt-1 text-xs text-slate-500">{{ snippet.note }}</p>
+                }
+              </div>
+            }
+          </div>
+
+          @if (guide.gotcha) {
+            <div class="mt-4 rounded-lg border border-amber-700/50 bg-amber-950/25 p-4">
+              <p class="text-sm text-amber-100"><strong>Watch out:</strong> {{ guide.gotcha }}</p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ============ TEST FIXTURES ============ -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">Dates Worth Testing</h3>
+    <p class="mb-4 text-sm text-slate-400">
+      Switching zones only helps if you point it at the dates where the rules do something
+      interesting. These six cover the anomalies from the
+      <a routerLink="/dst" class="text-cyan-400 underline decoration-cyan-700 hover:text-cyan-300"
+        >DST &amp; Offsets</a
+      >
+      page:
+    </p>
+
+    <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900">
+      <table class="w-full min-w-[620px] text-sm">
+        <caption class="sr-only">
+          Recommended date and timezone pairs for a test fixture set
+        </caption>
+        <thead>
+          <tr class="border-b border-slate-700 text-left">
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Date</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Zone</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Why it matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (fixture of testDates; track fixture.date + fixture.zone) {
+            <tr class="border-b border-slate-800 last:border-0">
+              <td class="px-4 py-3 font-mono text-xs whitespace-nowrap text-green-300">
+                {{ fixture.date }}
+              </td>
+              <td class="px-4 py-3 font-mono text-xs whitespace-nowrap text-cyan-300">
+                {{ fixture.zone }}
+              </td>
+              <td class="px-4 py-3 text-slate-300">{{ fixture.why }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ SUMMARY ============ -->
+  <section>
+    <h3 class="mb-4 text-2xl font-semibold text-purple-300">Which One Should You Use?</h3>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div class="rounded-xl border border-green-800/40 bg-green-950/20 p-5">
+        <h4 class="mb-2 font-semibold text-green-200">Poking at a bug</h4>
+        <p class="text-sm text-green-100/90">
+          <strong>DevTools Sensors.</strong> Two keystrokes, scoped to one tab, undone by closing
+          the panel. Nothing else comes close for a quick check.
+        </p>
+      </div>
+      <div class="rounded-xl border border-cyan-800/40 bg-cyan-950/20 p-5">
+        <h4 class="mb-2 font-semibold text-cyan-200">Developing a feature</h4>
+        <p class="text-sm text-cyan-100/90">
+          <strong>The TZ variable.</strong> Reproducible, committed in a script, and identical to
+          what CI does. No system settings to remember to undo.
+        </p>
+      </div>
+      <div class="rounded-xl border border-amber-800/40 bg-amber-950/20 p-5">
+        <h4 class="mb-2 font-semibold text-amber-200">Reproducing a user report</h4>
+        <p class="text-sm text-amber-100/90">
+          <strong>The OS setting.</strong> The only one that exercises the whole stack the way the
+          user's machine does — including anything outside the browser.
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-5 rounded-xl border border-slate-700 bg-slate-900 p-5">
+      <p class="text-sm text-slate-300">
+        <strong class="text-slate-100">One habit worth building:</strong> before you call any
+        date-handling work finished, flip to a zone on the other side of UTC and reload. It takes
+        fifteen seconds and it catches the class of bug that otherwise gets found by a user in
+        Auckland.
+      </p>
+    </div>
+  </section>
+
+  <!-- Screen-reader confirmation for the copy buttons -->
+  <p aria-live="polite" class="sr-only">
+    @if (copiedCode()) {
+      Command copied to clipboard.
+    }
+  </p>
+</article>

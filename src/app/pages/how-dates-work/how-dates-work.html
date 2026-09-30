@@ -1,0 +1,597 @@
+<article class="space-y-10">
+  <section>
+    <h2 class="mb-4 text-3xl font-bold text-cyan-300">How Dates Work in JavaScript</h2>
+
+    <div class="space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <p class="leading-relaxed text-slate-300">
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-amber-300">new Date()</code>
+        returns an object. Its essential time value is a number of
+        <strong class="text-cyan-200">milliseconds since 1970-01-01T00:00:00Z</strong> (the Unix
+        epoch), or <code class="rounded bg-slate-800 px-1">NaN</code> when invalid.
+      </p>
+      <aside class="rounded-lg border border-cyan-800/60 bg-cyan-950/20 p-4">
+        <h3 class="mb-2 font-semibold text-cyan-200">What does “midnight UTC” mean?</h3>
+        <p class="text-sm leading-relaxed text-slate-300">
+          Midnight is <code class="rounded bg-slate-800 px-1">00:00:00</code>, the start of a
+          calendar day. UTC is the shared reference clock. So
+          <code class="rounded bg-slate-800 px-1">1970-01-01T00:00:00Z</code> means the start of 1
+          January 1970 on the UTC clock; <code class="rounded bg-slate-800 px-1">Z</code> means a
+          zero UTC offset. At that same instant it was 01:00 in Madrid and 19:00 on the previous day
+          in New York.
+        </p>
+      </aside>
+      <p class="leading-relaxed text-slate-300">
+        A <code class="rounded bg-slate-800 px-1">Date</code> does not store an IANA zone such as
+        <code class="rounded bg-slate-800 px-1">Europe/Madrid</code>. The
+        <code class="rounded bg-slate-800 px-1">GMT+0200</code> shown in the console is produced
+        when the runtime renders the stored instant using the host's timezone rules. Parsing and
+        formatting are the two boundaries where that interpretation enters.
+      </p>
+      <p
+        class="rounded-lg border border-slate-700 bg-slate-950/60 p-4 text-sm leading-relaxed text-slate-400"
+      >
+        Every value on this page was computed live, in your browser, in
+        <code class="rounded bg-slate-800 px-1 text-cyan-300">{{ localTimezone() }}</code
+        >. Open this page from a machine in another zone and several of the numbers change — that is
+        the entire lesson.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= TRAP 1 ================= -->
+  <section>
+    <div class="mb-4 flex items-baseline gap-3">
+      <span class="rounded bg-red-500/20 px-2 py-1 font-mono text-xs font-bold text-red-300"
+        >TRAP 1</span
+      >
+      <h3 class="text-2xl font-semibold text-purple-300">
+        The shape of the string changes the rule
+      </h3>
+    </div>
+
+    <p class="mb-4 text-slate-400">
+      This is the most common date bug in JavaScript, and it is not a browser quirk — it is
+      specified. A <strong class="text-slate-200">date-only</strong> ISO string is read as
+      <strong class="text-amber-200">UTC</strong>. A
+      <strong class="text-slate-200">date-time</strong> ISO string with no offset is read as
+      <strong class="text-cyan-200">local time</strong>. Two strings that look almost identical
+      follow opposite rules.
+    </p>
+
+    <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900">
+      <table class="w-full min-w-[720px] text-sm">
+        <caption class="sr-only">
+          How different ISO string shapes are interpreted by the Date constructor
+        </caption>
+        <thead>
+          <tr class="border-b border-slate-700 text-left">
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Input</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Rule applied</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Resulting instant</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Your local reading</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (sample of parseSamples(); track sample.input) {
+            <tr class="border-b border-slate-800 last:border-0">
+              <td class="px-4 py-3 font-mono text-xs whitespace-nowrap text-green-300">
+                "{{ sample.input }}"
+              </td>
+              <td class="px-4 py-3">
+                <span
+                  class="mb-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase"
+                  [class]="
+                    sample.interpretedAs === 'utc'
+                      ? 'bg-amber-500/20 text-amber-300'
+                      : sample.interpretedAs === 'local'
+                        ? 'bg-cyan-500/20 text-cyan-300'
+                        : 'bg-green-500/20 text-green-300'
+                  "
+                >
+                  {{ sample.interpretedAs }}
+                </span>
+                <span class="block text-xs text-slate-400">{{ sample.rule }}</span>
+              </td>
+              <td class="px-4 py-3 font-mono text-xs break-all text-slate-300">{{ sample.iso }}</td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <span class="font-mono text-cyan-300">{{ sample.localTime }}</span>
+                <span class="block text-xs text-slate-500">{{ sample.localDay }}</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-4 rounded-xl border border-red-700/50 bg-red-950/25 p-5">
+      <h4 class="mb-3 font-semibold text-red-200">The off-by-one-day bug, on your machine</h4>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <code class="mb-2 block font-mono text-xs text-slate-400">new Date("2024-06-15")</code>
+          <p class="font-mono text-sm text-red-300">{{ offByOneDay().wrong }}</p>
+        </div>
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <code class="mb-2 block font-mono text-xs text-slate-400"
+            >new Date("2024-06-15T00:00:00")</code
+          >
+          <p class="font-mono text-sm text-green-300">{{ offByOneDay().right }}</p>
+        </div>
+      </div>
+      @if (isBehindUtc()) {
+        <p class="mt-4 text-sm text-red-200">
+          Your zone is <strong>behind UTC</strong>, so you can see it directly: the date-only string
+          renders as the <strong>previous day</strong>. Ship a date picker that does this and every
+          user west of Greenwich reports "it saved the wrong day".
+        </p>
+      } @else {
+        <p class="mt-4 text-sm text-amber-200">
+          Your zone is <strong>at or ahead of UTC</strong>, so both rows happen to agree today —
+          which is precisely why this bug reaches production. It is invisible to a developer in
+          Europe or Asia and breaks for every user in the Americas.
+        </p>
+      }
+    </div>
+  </section>
+
+  <!-- ================= TRAP 2 ================= -->
+  <section>
+    <div class="mb-4 flex items-baseline gap-3">
+      <span class="rounded bg-red-500/20 px-2 py-1 font-mono text-xs font-bold text-red-300"
+        >TRAP 2</span
+      >
+      <h3 class="text-2xl font-semibold text-purple-300">Months count from zero</h3>
+    </div>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <p class="mb-5 text-slate-400">
+        In the numeric constructor, January is
+        <code class="rounded bg-slate-800 px-1 text-amber-300">0</code> and December is
+        <code class="rounded bg-slate-800 px-1 text-amber-300">11</code>. Inherited from Java's
+        <code class="rounded bg-slate-800 px-1">java.util.Date</code>. Every other field — year,
+        day, hour — is one-based. Only the month is not.
+      </p>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="rounded-lg border border-red-800/40 bg-slate-950/60 p-4">
+          <code class="mb-2 block font-mono text-xs text-slate-400">new Date(2024, 6, 15)</code>
+          <p class="font-mono text-sm text-red-300">{{ zeroIndexedMonths().wrong }}</p>
+          <p class="mt-2 text-xs text-red-300/80">Reads like "June 15". It is July.</p>
+        </div>
+        <div class="rounded-lg border border-green-800/40 bg-slate-950/60 p-4">
+          <code class="mb-2 block font-mono text-xs text-slate-400">new Date(2024, 5, 15)</code>
+          <p class="font-mono text-sm text-green-300">{{ zeroIndexedMonths().right }}</p>
+          <p class="mt-2 text-xs text-green-300/80">June actually needs a 5.</p>
+        </div>
+      </div>
+      <p class="mt-5 border-t border-slate-800 pt-4 text-sm text-slate-400">
+        Do not fight it — the numeric constructor has one real advantage that makes it worth the
+        annoyance: its values are <strong class="text-slate-200">unambiguously local</strong>. No
+        parsing rules, no string format guessing. If you need UTC instead, wrap it:
+        <code class="rounded bg-slate-800 px-1 text-amber-300">new Date(Date.UTC(2024, 5, 15))</code
+        >.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= TRAP 3 ================= -->
+  <section>
+    <div class="mb-4 flex items-baseline gap-3">
+      <span class="rounded bg-red-500/20 px-2 py-1 font-mono text-xs font-bold text-red-300"
+        >TRAP 3</span
+      >
+      <h3 class="text-2xl font-semibold text-purple-300">
+        Anything that is not ISO 8601 is a coin flip
+      </h3>
+    </div>
+
+    <p class="mb-4 text-slate-400">
+      The spec requires its Date Time String Format plus invariants for strings produced by
+      <code class="rounded bg-slate-800 px-1">toString()</code> and
+      <code class="rounded bg-slate-800 px-1">toUTCString()</code>. Other formats are
+      <strong class="text-slate-200">implementation-defined</strong> — engines are free to guess,
+      and they disagree. Below is what <em>your</em> engine did:
+    </p>
+
+    <div class="space-y-2 rounded-xl border border-slate-700 bg-slate-900 p-5">
+      @for (sample of nonStandardStrings(); track sample.input) {
+        <div
+          class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-slate-800 py-2 last:border-0"
+        >
+          <code class="w-52 shrink-0 font-mono text-xs text-green-300">"{{ sample.input }}"</code>
+          <span
+            class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase"
+            [class]="sample.valid ? 'bg-amber-500/20 text-amber-300' : 'bg-red-500/20 text-red-300'"
+          >
+            {{ sample.valid ? 'parsed' : 'invalid' }}
+          </span>
+          <code class="font-mono text-xs break-all text-slate-400">{{ sample.result }}</code>
+        </div>
+      }
+    </div>
+
+    <div class="mt-4 rounded-xl border border-amber-700/50 bg-amber-950/25 p-4">
+      <p class="text-sm text-amber-100">
+        <strong>Do not read the "parsed" rows as permission.</strong> A string like
+        <code class="rounded bg-slate-800 px-1">"2024-06-15 12:00:00"</code> — an ISO date-time with
+        a space instead of <code class="rounded bg-slate-800 px-1">T</code> — is not valid ISO 8601.
+        V8 accepts it anyway; other engines have historically returned
+        <code class="rounded bg-slate-800 px-1">Invalid Date</code>. It works on your machine and
+        fails on a user's. Never rely on it.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= TRAP 4 ================= -->
+  <section>
+    <div class="mb-4 flex items-baseline gap-3">
+      <span class="rounded bg-red-500/20 px-2 py-1 font-mono text-xs font-bold text-red-300"
+        >TRAP 4</span
+      >
+      <h3 class="text-2xl font-semibold text-purple-300">Two identical Dates are not equal</h3>
+    </div>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <p class="mb-4 text-slate-400">
+        <code class="rounded bg-slate-800 px-1 text-amber-300">a</code> and
+        <code class="rounded bg-slate-800 px-1 text-amber-300">b</code> below hold the same instant.
+        Equality operators compare object identity, so they are false — but relational operators
+        coerce to a number, so <em>those</em> work. An inconsistency you simply have to memorise.
+      </p>
+      <div class="space-y-2 font-mono text-sm">
+        @for (row of equalityRows(); track row.expression) {
+          <div class="flex items-center gap-3 rounded bg-slate-950/60 px-4 py-2">
+            <code class="flex-1 text-slate-300">{{ row.expression }}</code>
+            <span [class]="row.value ? 'text-green-300' : 'text-red-300'">{{ row.value }}</span>
+            <span aria-hidden="true">{{ row.reliable ? '✓' : '✗' }}</span>
+          </div>
+        }
+      </div>
+      <p class="mt-4 text-sm text-slate-400">
+        Compare with <code class="rounded bg-slate-800 px-1 text-amber-300">getTime()</code>, or
+        coerce with a unary <code class="rounded bg-slate-800 px-1 text-amber-300">+a === +b</code>.
+        And note the second-order trap: two Dates being <em>equal instants</em> is not the same
+        question as two Dates being <em>the same calendar day</em> — the latter needs a zone before
+        it even means anything.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= TRAP 5 ================= -->
+  <section>
+    <div class="mb-4 flex items-baseline gap-3">
+      <span class="rounded bg-red-500/20 px-2 py-1 font-mono text-xs font-bold text-red-300"
+        >TRAP 5</span
+      >
+      <h3 class="text-2xl font-semibold text-purple-300">Every setter mutates in place</h3>
+    </div>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <p class="mb-5 text-slate-400">
+        <code class="rounded bg-slate-800 px-1 text-amber-300">Date</code> is mutable, and
+        <code class="rounded bg-slate-800 px-1 text-amber-300">setMonth</code> and friends return a
+        timestamp rather than a new Date. Assigning a Date to another variable copies the
+        <em>reference</em>, so mutating through one name changes both.
+      </p>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div class="rounded-lg border border-red-800/40 bg-slate-950/60 p-4">
+          <app-code-block
+            class="mb-3"
+            [code]="mutatingDateCode"
+            language="javascript"
+            label="Date mutation example"
+          />
+          <p class="text-xs text-slate-500">original is now</p>
+          <p class="font-mono text-sm text-red-300">{{ mutationDemo().mutatedOriginal }}</p>
+          <p class="mt-2 text-xs text-red-300/80">
+            You never touched <code class="rounded bg-slate-800 px-1">original</code>. It changed.
+          </p>
+        </div>
+        <div class="rounded-lg border border-green-800/40 bg-slate-950/60 p-4">
+          <app-code-block
+            class="mb-3"
+            [code]="copiedDateCode"
+            language="javascript"
+            label="Safe Date copy example"
+          />
+          <p class="text-xs text-slate-500">pristine / copy</p>
+          <p class="font-mono text-sm text-green-300">{{ mutationDemo().safeOriginal }}</p>
+          <p class="font-mono text-sm text-cyan-300">{{ mutationDemo().safeCopy }}</p>
+        </div>
+      </div>
+      <p class="mt-5 border-t border-slate-800 pt-4 text-sm text-slate-400">
+        This is the single biggest reason the ecosystem moved to immutable date libraries — and why
+        the incoming <code class="rounded bg-slate-800 px-1 text-amber-300">Temporal</code> API
+        makes every object frozen. Until then:
+        <strong class="text-slate-200">always copy before you set</strong>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= TRAP 6 ================= -->
+  <section>
+    <div class="mb-4 flex items-baseline gap-3">
+      <span class="rounded bg-amber-500/20 px-2 py-1 font-mono text-xs font-bold text-amber-300"
+        >TRAP 6</span
+      >
+      <h3 class="text-2xl font-semibold text-purple-300">Out-of-range values roll over silently</h3>
+    </div>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <p class="mb-5 text-slate-400">
+        There is no 30th of February, so JavaScript quietly moves on rather than throwing. This is
+        genuinely useful for arithmetic — and genuinely dangerous for validation, because a typo
+        never surfaces as an error.
+      </p>
+      <div class="space-y-2">
+        @for (row of rolloverDemo(); track row.expression) {
+          <div
+            class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded bg-slate-950/60 px-4 py-2 font-mono text-sm"
+          >
+            <code class="w-52 shrink-0 text-slate-400">{{ row.expression }}</code>
+            <span class="text-slate-500" aria-hidden="true">→</span>
+            <span class="text-amber-300">{{ row.result }}</span>
+          </div>
+        }
+      </div>
+      <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="rounded-lg border border-green-800/40 bg-green-950/20 p-4">
+          <p class="text-sm text-green-200">
+            <strong>Use it deliberately.</strong> "30 days from now" is just
+            <code class="rounded bg-slate-800 px-1">d.setDate(d.getDate() + 30)</code>. Month and
+            year boundaries handle themselves.
+          </p>
+        </div>
+        <div class="rounded-lg border border-red-800/40 bg-red-950/20 p-4">
+          <p class="text-sm text-red-200">
+            <strong>Never use it as validation.</strong> User input of "February 31" becomes a valid
+            March date. Range-check the numbers yourself before constructing.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TRAP 7 ================= -->
+  <section>
+    <div class="mb-4 flex items-baseline gap-3">
+      <span class="rounded bg-red-500/20 px-2 py-1 font-mono text-xs font-bold text-red-300"
+        >TRAP 7</span
+      >
+      <h3 class="text-2xl font-semibold text-purple-300">A day is not 86,400,000 milliseconds</h3>
+    </div>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <p class="mb-5 text-slate-400">
+        Adding 24 hours of milliseconds adds
+        <strong class="text-slate-200">exactly 24 hours of elapsed time</strong>. Adding a calendar
+        day adds <strong class="text-slate-200">whatever that day happens to be</strong>. On a
+        daylight-saving boundary those are different answers. Fixed to
+        <code class="rounded bg-slate-800 px-1 text-cyan-300">{{ dstArithmetic().zone }}</code>
+        below, where 2024-03-10 is only 23 hours long:
+      </p>
+
+      <div class="space-y-3">
+        <div class="rounded-lg bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase">Start</span>
+          <p class="font-mono text-sm text-slate-200">{{ dstArithmetic().start }}</p>
+        </div>
+        <div class="rounded-lg border border-red-800/40 bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase"
+            >+ 86,400,000 ms &nbsp;·&nbsp; elapsed time</span
+          >
+          <p class="font-mono text-sm text-red-300">{{ dstArithmetic().addedMilliseconds }}</p>
+          <p class="mt-1 text-xs text-red-300/80">
+            The wall clock moved to 13:00. A "daily 12:00 reminder" just became 13:00.
+          </p>
+        </div>
+        <div class="rounded-lg border border-green-800/40 bg-slate-950/60 p-4">
+          <span class="text-xs tracking-wider text-slate-500 uppercase"
+            >+ 1 via setDate() &nbsp;·&nbsp; calendar day</span
+          >
+          <p class="font-mono text-sm text-green-300">{{ dstArithmetic().addedCalendarDay }}</p>
+          <p class="mt-1 text-xs text-green-300/80">
+            Wall clock preserved at 12:00. Only 23 hours of real time elapsed.
+          </p>
+        </div>
+      </div>
+
+      <p class="mt-5 border-t border-slate-800 pt-4 text-sm text-slate-400">
+        Neither is wrong — they answer different questions. "Remind me in 24 hours" wants the first.
+        "Remind me tomorrow at noon" wants the second. Decide which one you mean
+        <em>before</em> you write the arithmetic. Note also that
+        <code class="rounded bg-slate-800 px-1 text-amber-300">setDate</code> works in the
+        <strong class="text-slate-200">runtime's local zone</strong>, so getting the calendar-day
+        answer for some <em>other</em> zone needs a real timezone library.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= FORMATTERS ================= -->
+  <section>
+    <h3 class="mb-2 text-2xl font-semibold text-purple-300">The Nine Stringifiers</h3>
+    <p class="mb-4 text-slate-400">
+      Not one of them accepts a format pattern. There is no
+      <code class="rounded bg-slate-800 px-1 text-amber-300">date.format('DD/MM/YYYY')</code> in the
+      language. That single gap is why the ecosystem grew a dozen formatting libraries — and why
+      <code class="rounded bg-slate-800 px-1 text-amber-300">Intl.DateTimeFormat</code> now exists.
+    </p>
+
+    <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900">
+      <table class="w-full min-w-[640px] text-sm">
+        <caption class="sr-only">
+          Output of each built-in Date stringifier for 23 January 2024, 17:23:42 local time
+        </caption>
+        <thead>
+          <tr class="border-b border-slate-700 text-left">
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Method</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">Basis</th>
+            <th scope="col" class="px-4 py-3 font-semibold text-slate-300">
+              Output on your machine
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of formatterOutputs(); track row.method) {
+            <tr class="border-b border-slate-800 last:border-0">
+              <td class="px-4 py-2.5 font-mono text-xs whitespace-nowrap text-amber-300">
+                {{ row.method }}
+              </td>
+              <td class="px-4 py-2.5">
+                <span
+                  class="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase"
+                  [class]="
+                    row.basis === 'utc'
+                      ? 'bg-amber-500/20 text-amber-300'
+                      : 'bg-cyan-500/20 text-cyan-300'
+                  "
+                  >{{ row.basis }}</span
+                >
+              </td>
+              <td class="px-4 py-2.5 font-mono text-xs break-all text-slate-300">
+                {{ row.output }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="mt-4 text-sm text-slate-400">
+      Note the split: the <span class="text-cyan-300">local</span> group and the
+      <span class="text-amber-300">UTC</span> group describe the <em>same instant</em> with
+      different numbers. Logging one and storing the other is how you end up debugging a "random"
+      few-hours drift.
+    </p>
+  </section>
+
+  <!-- ================= EXPLORER ================= -->
+  <section>
+    <h3 class="mb-4 text-2xl font-semibold text-purple-300">Try It Yourself</h3>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-900 p-6">
+      <label for="date-input" class="mb-2 block text-sm text-slate-400">Enter a date string:</label>
+      <input
+        id="date-input"
+        type="text"
+        [value]="inputDate()"
+        (input)="onInputChange($event)"
+        class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 font-mono text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
+        placeholder="e.g. 2024-06-15T14:30:00Z"
+      />
+
+      @let parsed = parsedDate();
+
+      @if (parsed.valid) {
+        <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="space-y-3">
+            <div>
+              <span class="text-xs tracking-wider text-slate-500 uppercase">Timestamp (ms)</span>
+              <p class="font-mono text-sm text-cyan-300">{{ parsed.timestamp }}</p>
+            </div>
+            <div>
+              <span class="text-xs tracking-wider text-slate-500 uppercase">toISOString()</span>
+              <p class="font-mono text-sm break-all text-green-300">{{ parsed.toISOString }}</p>
+            </div>
+            <div>
+              <span class="text-xs tracking-wider text-slate-500 uppercase">toUTCString()</span>
+              <p class="font-mono text-sm break-all text-amber-300">{{ parsed.toUTCString }}</p>
+            </div>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <span class="text-xs tracking-wider text-slate-500 uppercase"
+                >toString() (local)</span
+              >
+              <p class="font-mono text-sm break-all text-slate-300">{{ parsed.toString }}</p>
+            </div>
+            <div>
+              <span class="text-xs tracking-wider text-slate-500 uppercase"
+                >getHours() vs getUTCHours()</span
+              >
+              <p class="font-mono text-sm">
+                <span class="text-cyan-300">{{ parsed.getHours }}</span>
+                <span class="text-slate-500"> vs </span>
+                <span class="text-amber-300">{{ parsed.getUTCHours }}</span>
+              </p>
+            </div>
+            <div>
+              <span class="text-xs tracking-wider text-slate-500 uppercase"
+                >getMonth() (zero-indexed!)</span
+              >
+              <p class="font-mono text-sm text-purple-300">{{ parsed.getMonth }}</p>
+            </div>
+            <div>
+              <span class="text-xs tracking-wider text-slate-500 uppercase"
+                >getTimezoneOffset() (min)</span
+              >
+              <p class="font-mono text-sm text-purple-300">{{ parsed.getTimezoneOffset }}</p>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="mt-5 rounded-lg border border-red-700/50 bg-red-950/25 p-4">
+          <p class="font-mono text-sm text-red-300">Invalid Date</p>
+          <p class="mt-1 text-xs text-red-300/80">
+            The constructor does not throw — it returns a Date whose timestamp is
+            <code class="rounded bg-slate-800 px-1">NaN</code>. Guard with
+            <code class="rounded bg-slate-800 px-1">Number.isNaN(d.getTime())</code>.
+          </p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ================= RULES ================= -->
+  <section>
+    <h3 class="mb-4 text-2xl font-semibold text-purple-300">Rules to Remember</h3>
+    <ul class="space-y-3 text-slate-300">
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-green-400" aria-hidden="true">✓</span>
+        <span
+          ><strong class="text-slate-100">Store and transmit instants in UTC</strong> — ISO 8601
+          with a <code class="rounded bg-slate-800 px-1 text-amber-300">Z</code> or an explicit
+          offset, or an integer epoch value.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-green-400" aria-hidden="true">✓</span>
+        <span
+          ><strong class="text-slate-100">Convert to local only at render time</strong> — the last
+          possible moment before a human reads it.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-green-400" aria-hidden="true">✓</span>
+        <span
+          ><strong class="text-slate-100">Copy before you mutate</strong> —
+          <code class="rounded bg-slate-800 px-1 text-amber-300">new Date(original)</code> then call
+          the setter.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-red-400" aria-hidden="true">✗</span>
+        <span
+          ><strong class="text-slate-100">Never parse a date-time string without an offset</strong>
+          — the result depends on the machine that runs it.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-red-400" aria-hidden="true">✗</span>
+        <span
+          ><strong class="text-slate-100">Never use Date for a date-only value.</strong> A birthday
+          is not an instant. "2024-06-15" is a <em>calendar date</em> and forcing it through a
+          timestamp is what creates the off-by-one bug in Trap 1. Keep it a string, or use
+          <code class="rounded bg-slate-800 px-1 text-amber-300">Temporal.PlainDate</code>.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-red-400" aria-hidden="true">✗</span>
+        <span
+          ><strong class="text-slate-100">Never hand-roll formatting.</strong> Month-name arrays and
+          zero-padding are solved problems —
+          <code class="rounded bg-slate-800 px-1 text-amber-300">Intl.DateTimeFormat</code> is built
+          in, locale-aware and free.</span
+        >
+      </li>
+    </ul>
+  </section>
+</article>

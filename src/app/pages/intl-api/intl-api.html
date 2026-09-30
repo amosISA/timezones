@@ -1,0 +1,167 @@
+<article class="space-y-8">
+  <section>
+    <h2 class="text-3xl font-bold text-cyan-300 mb-4">The Intl API — Your Built-in Superpower</h2>
+
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 space-y-4">
+      <p class="text-slate-300 leading-relaxed">
+        Forget external date libraries for formatting. Modern browsers ship with the
+        <code class="text-amber-300 bg-slate-800 px-1.5 py-0.5 rounded">Intl</code> namespace — a
+        powerful set of internationalization APIs that handle timezone conversions and locale-aware
+        formatting natively.
+      </p>
+      <p class="text-slate-300 leading-relaxed">
+        <code class="text-amber-300 bg-slate-800 px-1.5 py-0.5 rounded">Intl.DateTimeFormat</code>
+        is the star. It can display any Date in
+        <strong class="text-cyan-200">any timezone</strong> and
+        <strong class="text-cyan-200">any locale</strong>
+        without mutating the original Date or importing anything.
+      </p>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <section>
+    <h3 class="text-2xl font-semibold text-purple-300 mb-4">Live Formatter</h3>
+
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label class="block text-xs text-slate-500 uppercase mb-1">Timezone (IANA)</label>
+          <select
+            (change)="onTimezoneChange($event)"
+            class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-cyan-500"
+          >
+            @for (tz of availableTimezones(); track tz) {
+              <option [value]="tz" [selected]="tz === selectedTimezone()">{{ tz }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-500 uppercase mb-1">Locale</label>
+          <select
+            (change)="onLocaleChange($event)"
+            class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-cyan-500"
+          >
+            @for (locale of availableLocales(); track locale) {
+              <option [value]="locale" [selected]="locale === selectedLocale()">
+                {{ locale }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Formatted output -->
+      <div class="space-y-4">
+        <div class="bg-slate-800 rounded-lg p-4">
+          <span class="text-xs text-slate-500 uppercase block mb-1">Full Date & Time</span>
+          <p class="text-cyan-300 font-mono">{{ formattedExamples().dateTimeFull }}</p>
+          <code class="text-xs text-slate-500 mt-2 block"
+            >Intl.DateTimeFormat(locale, &#123; timeZone, dateStyle: 'full', timeStyle: 'long'
+            &#125;)</code
+          >
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="bg-slate-800 rounded-lg p-4">
+            <span class="text-xs text-slate-500 uppercase block mb-1">Date Only</span>
+            <p class="text-green-300 font-mono">{{ formattedExamples().dateOnly }}</p>
+          </div>
+          <div class="bg-slate-800 rounded-lg p-4">
+            <span class="text-xs text-slate-500 uppercase block mb-1">Time Only</span>
+            <p class="text-amber-300 font-mono">{{ formattedExamples().timeOnly }}</p>
+          </div>
+        </div>
+        <div class="bg-slate-800 rounded-lg p-4">
+          <span class="text-xs text-slate-500 uppercase block mb-1"
+            >Relative (Intl.RelativeTimeFormat)</span
+          >
+          <p class="text-purple-300 font-mono">{{ formattedExamples().relative }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- formatToParts -->
+  <section>
+    <h3 class="text-2xl font-semibold text-purple-300 mb-4">
+      formatToParts() — Surgical Precision
+    </h3>
+
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
+      <p class="text-slate-400 text-sm mb-4">
+        Need just the hour? Or the timezone name?
+        <code class="text-amber-300 bg-slate-800 px-1 rounded">formatToParts()</code>
+        returns each piece as a separate object so you can cherry-pick what you need.
+      </p>
+      <div class="flex flex-wrap gap-2">
+        @for (part of formattedExamples().parts; track $index) {
+          <span
+            class="inline-flex items-center gap-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-xs"
+          >
+            <span class="text-slate-500">{{ part.type }}:</span>
+            <span class="text-cyan-300 font-mono">{{ part.value }}</span>
+          </span>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- World Clock -->
+  <section>
+    <h3 class="text-2xl font-semibold text-purple-300 mb-4">World Clock Comparison</h3>
+
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        @for (item of multiTimezoneComparison(); track item.timezone) {
+          <div class="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-3">
+            <span class="text-slate-400 text-xs truncate mr-2">{{ item.timezone }}</span>
+            <span class="text-cyan-300 font-mono text-sm whitespace-nowrap">{{ item.time }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h3 class="text-2xl font-semibold text-purple-300 mb-4">Why Intl Matters</h3>
+    <ul class="space-y-2 text-slate-300">
+      <li class="flex items-start gap-3">
+        <span class="text-green-400 mt-1">✓</span>
+        <span
+          ><strong class="text-slate-100">Zero dependencies</strong> — it ships with every modern
+          browser and Node.js.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="text-green-400 mt-1">✓</span>
+        <span
+          ><strong class="text-slate-100">IANA-aware</strong> — it knows about DST rules, historical
+          timezone changes, everything.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="text-green-400 mt-1">✓</span>
+        <span
+          ><strong class="text-slate-100">Locale-aware</strong> — different countries format dates
+          differently. Intl handles it.</span
+        >
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="mt-1 text-amber-400" aria-hidden="true">!</span>
+        <span
+          ><strong class="text-slate-100">Angular's DatePipe does NOT use it.</strong>
+          <code class="rounded bg-slate-800 px-1 text-amber-300">&#64;angular/common</code> ships
+          its own locale data and contains zero references to
+          <code class="rounded bg-slate-800 px-1 text-amber-300">Intl.DateTimeFormat</code>. Its
+          timezone parameter resolves a fixed offset, not an IANA name — see the
+          <a
+            routerLink="/angular-dates"
+            class="text-cyan-400 underline decoration-cyan-700 hover:text-cyan-300"
+            >Angular &amp; Dates</a
+          >
+          tab. For zone-aware display, reach for Intl directly.</span
+        >
+      </li>
+    </ul>
+  </section>
+</article>

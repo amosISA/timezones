@@ -1,59 +1,60 @@
-# AngularTimezones
+# The Hour That Doesn't Exist
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.21.
+An Angular 22 zoneless teaching app about JavaScript dates, IANA time zones, daylight-saving transitions, Angular `DatePipe`, testing across zones, and the path to Temporal.
 
-## Development server
+The application is intentionally interactive: examples run in the visitor's runtime so it is clear which behavior comes from ECMAScript, Angular, ICU/tzdb, or the host environment.
 
-To start a local development server, run:
+## What is verified
 
-```bash
-ng serve
-```
+The technical content was rechecked on **16 September 2026** against:
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- ECMAScript and ECMA-402 specifications
+- Angular **22.1.4** documentation and `format_date.ts` source
+- IANA tzdb documentation and NIST time-history material
+- TC39 Temporal specification and implementation-status page
+- Node, Chrome DevTools, Playwright, and HTML documentation
+- npm package metadata and a dated weekly-download snapshot
 
-## Code scaffolding
+The in-app **Sources** page links every primary source. The long-form posts live in:
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- [`docs/the-hour-that-doesnt-exist.md`](docs/the-hour-that-doesnt-exist.md) — the main narrative article
+- [`docs/timezones.md`](docs/timezones.md) — the structured Angular guide
 
-```bash
-ng generate component component-name
-```
+Package versions and download counts are snapshots, not permanent claims. Browser and runtime support is feature-detected where possible.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Shiki
 
-```bash
-ng generate --help
-```
+Code examples use [Shiki](https://shiki.style/) 4.4.3. The highlighter is loaded only when a code block needs it, and token text is rendered through Angular interpolation rather than injected with `innerHTML`.
 
-## Building
+Relevant files:
 
-To build the project run:
+- `src/app/shared/shiki-highlighter.ts` — languages, theme, and lazy highlighter setup
+- `src/app/shared/code-block.ts` — safe Angular token renderer with a plain-text fallback
 
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Run locally
 
 ```bash
-ng test
+pnpm install
+pnpm start
 ```
 
-## Running end-to-end tests
+Open `http://localhost:4200`.
 
-For end-to-end (e2e) testing, run:
+## Verification
 
 ```bash
-ng e2e
+pnpm test
+pnpm test:zones
+pnpm build
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+- `pnpm test` pins the Node test runtime to UTC.
+- `pnpm test:zones` reruns the suite in UTC, New York, Kathmandu, Kiritimati, and Lord Howe.
+- Browser timezone emulation belongs in DevTools Sensors or a browser automation context; changing only the Angular dev-server process does not change an existing browser tab.
 
-## Additional Resources
+## Important scope notes
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- `Date` stores an instant, not an IANA zone.
+- Angular `DatePipe` can format local time or fixed offsets, but Angular 22.1.4 does not resolve IANA regional rules from values such as `America/New_York`.
+- IANA data is versioned. Old runtimes can have stale rules, and pre-1970 historical coverage varies.
+- Temporal is Stage 4, but support must still be checked in the actual runtime matrix.
