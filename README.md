@@ -1,8 +1,16 @@
 # The Hour That Doesn't Exist
 
+![Angular dates and time zones illustrated with clocks and a calendar](public/dates_timezones_angular.jpg)
+
 An Angular 22 zoneless teaching app about JavaScript dates, IANA time zones, daylight-saving transitions, Angular `DatePipe`, testing across zones, and the path to Temporal.
 
 The application is intentionally interactive: examples run in the visitor's runtime so it is clear which behavior comes from ECMAScript, Angular, ICU/tzdb, or the host environment.
+
+## Companion article
+
+This repository is the interactive companion to [The Hour That Doesn’t Exist](https://www.codigotipado.com/p/the-hour-that-doesnt-exist), a practical field guide to dates, time zones, and the Angular APIs that can produce surprising results.
+
+The article provides the narrative and explanations; this application lets you run the examples, inspect edge cases, and experiment with the concepts in your own browser.
 
 ## What is verified
 
